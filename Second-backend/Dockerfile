@@ -7,6 +7,7 @@ RUN npm ci --no-audit --no-fund
 
 COPY tsconfig.json ./
 COPY src ./src
+COPY eval ./eval
 
 ENV PORT=3001
 EXPOSE 3001

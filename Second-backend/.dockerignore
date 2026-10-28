@@ -5,3 +5,4 @@ uploads
 grobid-output
 tests
 *.log
+eval/results

@@ -159,6 +159,23 @@ What is covered:
 - **LLM output parsing**: JSON wrapped in markdown or extra text
 - **Agent A2's tool loop**: answer synthesis, removal of citations to non-existent evidence, and error paths
 
+## Citation evaluation
+
+`Second-backend/eval/questions.json` holds 18 questions about the MagNet paper (CVPR 2021): 12 about the paper itself and 6 that compare it with work it cites. The runner sends each one through the full agent pipeline and measures:
+
+- **Section precision**: main-paper citations that point to a section which actually covers the question
+- **Named-citation accuracy**: in comparison answers, citations attached to a named paper (e.g. "GLNet [5]") that point to that paper or to a section discussing it
+- **External usage**: comparison answers that cite at least one downloaded reference
+
+```bash
+docker compose run --build --rm \
+  -v "$PWD/path/to/magnet.pdf:/data/paper.pdf:ro" \
+  -v "$PWD/Second-backend/eval/results:/app/eval/results" \
+  backend npm run eval -- /data/paper.pdf --label baseline
+```
+
+Use `--only Q01,C06` to run a subset. Results are written to `Second-backend/eval/results/`.
+
 ## Tech Stack
 
 **Frontend:**

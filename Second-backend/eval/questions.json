@@ -1,0 +1,138 @@
+{
+  "paper": "Huynh et al., Progressive Semantic Segmentation (MagNet), CVPR 2021",
+  "notes": "acceptableSections are matched case-insensitively as substrings of GROBID section names. namedPapers lists works a comparison answer may name; a citation attached to that name is correct if it points to the paper itself (titleKeywords) or to an acceptable section of the main paper that discusses it.",
+  "papers": {
+    "GLNet": { "aliases": ["GLNet", "Global-Local Network", "Collaborative Global-Local"], "titleKeywords": ["global-local"] },
+    "PointRend": { "aliases": ["PointRend"], "titleKeywords": ["pointrend"] },
+    "CascadePSP": { "aliases": ["CascadePSP", "CascadedPSP"], "titleKeywords": ["cascadepsp"] },
+    "SegFix": { "aliases": ["SegFix"], "titleKeywords": ["segfix"] },
+    "DenseCRF": { "aliases": ["DenseCRF", "Dense CRF", "CRFs", "CRF"], "titleKeywords": ["fully connected crfs"] },
+    "DGF": { "aliases": ["DGF", "Deep Guided Filter", "Guided Filter"], "titleKeywords": ["guided filter", "guided image filtering"] },
+    "RefineNet": { "aliases": ["RefineNet"], "titleKeywords": ["refinenet"] },
+    "FPN": { "aliases": ["FPN", "Feature Pyramid Network"], "titleKeywords": ["feature pyramid"] },
+    "DeepLab": { "aliases": ["DeepLab", "DeepLabv3+", "DeepLabV3+"], "titleKeywords": ["deeplab"] },
+    "FCN": { "aliases": ["FCN", "FCN-8s", "Fully Convolutional Network"], "titleKeywords": ["fully convolutional networks"] },
+    "SegNet": { "aliases": ["SegNet"], "titleKeywords": ["segnet"] },
+    "U-Net": { "aliases": ["U-Net", "U-net", "Unet"], "titleKeywords": ["u-net"] },
+    "PSPNet": { "aliases": ["PSPNet"], "titleKeywords": ["pyramid scene parsing"] },
+    "ICNet": { "aliases": ["ICNet"], "titleKeywords": ["icnet"] },
+    "HRNet": { "aliases": ["HRNet", "HRNetV2"], "titleKeywords": ["high-resolution representation"] },
+    "ISS": { "aliases": ["ISS", "Iterative Instance Segmentation"], "titleKeywords": ["iterative instance segmentation"] }
+  },
+  "questions": [
+    {
+      "id": "Q01", "type": "in-paper",
+      "question": "What problem does MagNet try to solve?",
+      "expected": "Segmenting high-resolution images without exceeding GPU memory or losing fine details; downsampling loses detail and patch processing lacks global context.",
+      "acceptableSections": ["Abstract", "Introduction", "Conclusions"]
+    },
+    {
+      "id": "Q02", "type": "in-paper",
+      "question": "How does the refinement module decide which pixels to refine?",
+      "expected": "It ranks pixels by Q = F(Y_u ⊙ (1 − R_u)): locations where the cumulative map Y is uncertain and the combined map R is confident, smoothed by median filtering; the top k are refined.",
+      "acceptableSections": ["Refinement module", "Ablation study: point selection", "With Xs"]
+    },
+    {
+      "id": "Q03", "type": "in-paper",
+      "question": "What are the inputs and the output of the refinement module?",
+      "expected": "Inputs: the scale-cumulative segmentation map Y and the scale-specific map O, both h×w×C. Output: the updated scale-cumulative map.",
+      "acceptableSections": ["Refinement module", "MagNet", "Implementation details", "With Xs"]
+    },
+    {
+      "id": "Q04", "type": "in-paper",
+      "question": "How does MagNet-Fast reduce the running time?",
+      "expected": "It runs on fewer scales and refines only the patches with the highest prediction uncertainty (e.g. 7 patches instead of 85 on Cityscapes).",
+      "acceptableSections": ["MagNet-Fast", "Benefits of multiple scale levels", "Experiments on the Cityscapes dataset"]
+    },
+    {
+      "id": "Q05", "type": "in-paper",
+      "question": "Which datasets were used to evaluate MagNet and what are their image resolutions?",
+      "expected": "Cityscapes (2048×1024), DeepGlobe (2448×2448) and Gleason (5000×5000).",
+      "acceptableSections": ["Experiments", "Content Resolution", "Abstract", "Experiments on the Cityscapes dataset", "DeepGlobe", "grade lesions"]
+    },
+    {
+      "id": "Q06", "type": "in-paper",
+      "question": "What mIoU does MagNet reach on Cityscapes and how much does it improve over downsampling?",
+      "expected": "67.57% mIoU, +4.34 over downsampling (63.23%).",
+      "acceptableSections": ["Benefits of multiple scale levels", "Experiments on the Cityscapes dataset", "Ablation study: point selection"]
+    },
+    {
+      "id": "Q07", "type": "in-paper",
+      "question": "Why are the intermediate scale levels important in MagNet?",
+      "expected": "Direct refinement from lowest to highest scale gains about 2% mIoU (65.23%); adding intermediate scales reaches 67.57% (+4.34).",
+      "acceptableSections": ["Benefits of multiple scale levels", "Introduction", "MagNet"]
+    },
+    {
+      "id": "Q08", "type": "in-paper",
+      "question": "How does the number of refinement points affect MagNet's accuracy?",
+      "expected": "Accuracy grows with more points and stops increasing after 2^16 points; selecting all points drops it to 66.86%.",
+      "acceptableSections": ["Ablation study: point selection"]
+    },
+    {
+      "id": "Q09", "type": "in-paper",
+      "question": "Which segmentation backbones were tested with MagNet in the ablation study?",
+      "expected": "DeepLabV3+ and HRNetV2-W48 + OCR; MagNet improved both by 2% to 5%.",
+      "acceptableSections": ["Ablation study: segmentation backbones"]
+    },
+    {
+      "id": "Q10", "type": "in-paper",
+      "question": "How was the refinement module trained?",
+      "expected": "Random patches with rotation and flip augmentation, SGD with momentum 0.9, weight decay 5e-4, learning rate 1e-3, 50 epochs, cross-entropy loss.",
+      "acceptableSections": ["Training", "Implementation details"]
+    },
+    {
+      "id": "Q11", "type": "in-paper",
+      "question": "What results does MagNet achieve on the Gleason dataset?",
+      "expected": "70.60% mIoU with a PSPNet backbone, +1.7 over PSPNet; MagNet-Fast 69.75%.",
+      "acceptableSections": ["grade lesions", "Gleason", "Conclusions"]
+    },
+    {
+      "id": "Q12", "type": "in-paper",
+      "question": "Describe the setup and results of MagNet on DeepGlobe.",
+      "expected": "FPN with ResNet-50 backbone, three scales 612→1224→2448, 2^16 points per scale; MagNet reaches 72.96% mIoU.",
+      "acceptableSections": ["DeepGlobe"]
+    },
+    {
+      "id": "C01", "type": "comparison",
+      "question": "Compare MagNet with PointRend for refining uncertain points.",
+      "expected": "Both refine uncertain points; PointRend uses one uncertainty map and local context and degrades beyond ~2048 points, while MagNet combines Y_u and R_u and keeps improving up to 2^16 points.",
+      "acceptableSections": ["Related Work", "Refinement module", "Ablation study: point selection", "Benefits of multiple scale levels", "Introduction"],
+      "namedPapers": ["PointRend"]
+    },
+    {
+      "id": "C02", "type": "comparison",
+      "question": "Compare MagNet with GLNet for ultra-high resolution segmentation.",
+      "expected": "GLNet fuses one global and one local branch and is hard to extend beyond two scales; MagNet uses multiple intermediate scales. On DeepGlobe MagNet 72.96% vs GLNet 71.60%.",
+      "acceptableSections": ["Related Work", "Introduction", "DeepGlobe"],
+      "namedPapers": ["GLNet"]
+    },
+    {
+      "id": "C03", "type": "comparison",
+      "question": "What are the differences between MagNet and CascadePSP?",
+      "expected": "CascadePSP refines repeatedly at different input resolutions, but a wrong prediction at a middle stage hurts later stages.",
+      "acceptableSections": ["Related Work"],
+      "namedPapers": ["CascadePSP"]
+    },
+    {
+      "id": "C04", "type": "comparison",
+      "question": "Compare MagNet with SegFix and DenseCRF as segmentation refinement methods.",
+      "expected": "On Cityscapes DenseCRF does not improve (62.95%), SegFix reaches 65.83% but misses small objects, MagNet reaches 67.57%.",
+      "acceptableSections": ["Related Work", "Benefits of multiple scale levels", "Experiments on the Cityscapes dataset", "DeepGlobe", "grade lesions"],
+      "namedPapers": ["SegFix", "DenseCRF"]
+    },
+    {
+      "id": "C05", "type": "comparison",
+      "question": "Compare MagNet with RefineNet and FPN as multi-scale approaches.",
+      "expected": "RefineNet fuses upsampled outputs of low-resolution branches and FPN aggregates multi-scale feature maps; MagNet processes the image at several magnification levels with a refinement module.",
+      "acceptableSections": ["Related Work", "DeepGlobe"],
+      "namedPapers": ["RefineNet", "FPN"]
+    },
+    {
+      "id": "C06", "type": "comparison",
+      "question": "What are the differences between MagNet and the related work it cites on high-resolution segmentation?",
+      "expected": "Contrast with GLNet, PointRend, CascadePSP, multi-scale networks (RefineNet, FPN, DeepLab) and post-processing (DenseCRF, guided filter).",
+      "acceptableSections": ["Related Work", "Introduction", "Abstract"],
+      "namedPapers": ["GLNet", "PointRend", "CascadePSP", "RefineNet", "FPN", "DeepLab", "DenseCRF", "DGF", "FCN", "SegNet", "PSPNet", "ICNet", "HRNet", "ISS"]
+    }
+  ]
+}
