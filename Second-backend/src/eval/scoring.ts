@@ -58,10 +58,22 @@ export function scoreSections(answer: string, citations: EvalCitation[], accepta
     .map(({ n, c }) => ({ marker: n, correct: sectionMatches(c!.section, acceptable), pointsTo: describe(c) }));
 }
 
+/** Split an answer into sentences and bullet lines, keeping citation markers with their sentence. */
+export function splitSentences(answer: string): string[] {
+  return answer
+    .split(/\n+/)
+    .flatMap((line) => line.split(/(?<=[.!?](?:\s*\[\d+\])*)\s+(?=[A-Z*])/))
+    .map((s) => s.trim())
+    .filter(Boolean);
+}
+
 /**
- * Named-citation accuracy: when the answer names another paper and puts a citation
- * right after it ("GLNet [5]"), does that citation point to the named paper itself,
- * or to a main-paper section that discusses it?
+ * Named-citation accuracy: for every sentence that names another paper and carries
+ * citations, do they point to that paper or to a main-paper section discussing it?
+ *
+ * - If citations follow the name directly ("GLNet [5]"), all of them must be valid.
+ *   This catches the paper's own reference numbers being reused as evidence IDs.
+ * - Otherwise at least one citation in the sentence must be valid.
  */
 export function scoreNamedCitations(
   answer: string,
@@ -71,30 +83,48 @@ export function scoreNamedCitations(
   acceptableSections: string[]
 ): CitationCheck[] {
   const checks: CitationCheck[] = [];
-  const counted = new Set<string>();
 
-  for (const name of names) {
-    const spec = papers[name];
-    if (!spec) continue;
-    // Longest aliases first so "DeepLabv3+" is preferred over "DeepLab".
-    const aliases = [...spec.aliases].sort((a, b) => b.length - a.length);
-    for (const alias of aliases) {
-      const re = new RegExp(`(?<![A-Za-z])${escapeRegex(alias)}(?![A-Za-z])[^\\[\\]\\n.;]{0,15}((?:\\s*\\[\\d+\\])+)`, "gi");
-      for (const m of answer.matchAll(re)) {
-        const at = `${name}@${m.index}`;
-        const markerStart = (m.index ?? 0) + m[0].length - m[1].length;
-        const key = `${markerStart}`;
-        if (counted.has(key) || counted.has(at)) continue;
-        counted.add(key);
-        counted.add(at);
-        for (const nm of m[1].matchAll(/\[(\d+)\]/g)) {
-          const n = Number(nm[1]);
-          const c = citations.find((x) => x.index === n);
-          const title = norm(c?.title);
-          const isNamedPaper = !!c && !c.is_main_paper && spec.titleKeywords.some((k) => title.includes(norm(k)));
-          const isDiscussingSection = !!c?.is_main_paper && sectionMatches(c.section, acceptableSections);
-          checks.push({ marker: n, name, correct: isNamedPaper || isDiscussingSection, pointsTo: describe(c) });
+  const valid = (n: number, spec: PaperSpec) => {
+    const c = citations.find((x) => x.index === n);
+    const title = norm(c?.title);
+    const isNamedPaper = !!c && !c.is_main_paper && spec.titleKeywords.some((k) => title.includes(norm(k)));
+    const isDiscussingSection = !!c?.is_main_paper && sectionMatches(c.section, acceptableSections);
+    return { ok: isNamedPaper || isDiscussingSection, pointsTo: describe(c) };
+  };
+
+  for (const sentence of splitSentences(answer)) {
+    const sentenceMarkers = [...sentence.matchAll(/\[(\d+)\]/g)].map((m) => Number(m[1]));
+    if (!sentenceMarkers.length) continue;
+
+    for (const name of names) {
+      const spec = papers[name];
+      if (!spec) continue;
+      const aliases = [...spec.aliases].sort((a, b) => b.length - a.length);
+      const aliasRe = (a: string) => `(?<![A-Za-z])${escapeRegex(a)}(?![A-Za-z])`;
+      if (!aliases.some((a) => new RegExp(aliasRe(a), "i").test(sentence))) continue;
+
+      // Citations written right after the name, e.g. "GLNet [5]" or "FCN-8s [21]".
+      const immediate: number[] = [];
+      for (const a of aliases) {
+        const re = new RegExp(`${aliasRe(a)}[^\\[\\]\\n.;]{0,15}((?:\\s*\\[\\d+\\])+)`, "gi");
+        for (const m of sentence.matchAll(re)) {
+          for (const nm of m[1].matchAll(/\[(\d+)\]/g)) {
+            const n = Number(nm[1]);
+            if (!immediate.includes(n)) immediate.push(n);
+          }
         }
+      }
+
+      if (immediate.length) {
+        for (const n of immediate) {
+          const v = valid(n, spec);
+          checks.push({ marker: n, name, correct: v.ok, pointsTo: v.pointsTo });
+        }
+      } else {
+        const results = sentenceMarkers.map((n) => ({ n, ...valid(n, spec) }));
+        const hit = results.find((r) => r.ok);
+        const shown = hit ?? results[0];
+        checks.push({ marker: shown.n, name, correct: !!hit, pointsTo: shown.pointsTo });
       }
     }
   }

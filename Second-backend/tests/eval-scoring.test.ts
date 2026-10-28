@@ -79,6 +79,40 @@ describe("scoreNamedCitations on a real answer with the numbering bug", () => {
   });
 });
 
+// A real answer to C02 after the evaluation run: GLNet is cited by sentence, not right after the name.
+const c02Answer = `Both **MagNet** (Main Paper, Side A) and **GLNet** (Collaborative Global-Local Networks, Side B) are designed to solve the memory bottleneck [1][2]. However, they adopt different strategies.
+  * **MagNet (Side A):** Employs a multi-scale, multi-stage progressive framework [1][3]. Each stage is refined by a refinement module [3][4].
+  * **GLNet (Side B):** Utilizes a dual-branch architecture with a global and a local branch [2].
+  * **MagNet:** Operates within GPU memory limits (or MagNet-Fast to select high-uncertainty patches) [5][6].
+  * Experiments on DeepGlobe demonstrate that MagNet outperforms prior methods, including GLNet-backed baselines [1][7].`;
+
+const c02Citations: EvalCitation[] = [
+  main(1, "Abstract"),
+  ext(2, "Collaborative Global-Local Networks for Memory-Efficient Segmentation of Ultra-High Resolution Images"),
+  main(3, "MagNet"),
+  main(4, "Refinement module"),
+  main(5, "MagNet-Fast"),
+  main(6, "Experiments on the Cityscapes dataset"),
+  main(7, "DeepGlobe"),
+];
+
+describe("scoring a comparison answer that cites by sentence", () => {
+  const q = spec.questions.find((x: any) => x.id === "C02");
+
+  it("credits sentences about GLNet that cite the GLNet paper or a section discussing it", () => {
+    const checks = scoreNamedCitations(c02Answer, c02Citations, spec.papers, q.namedPapers, q.acceptableSections);
+    expect(checks.length).toBe(3);
+    expect(ratio(checks)).toBe(1);
+  });
+
+  it("accepts MagNet's own method sections when describing MagNet's side", () => {
+    const checks = scoreSections(c02Answer, c02Citations, [...q.acceptableSections, ...spec.magnetSections]);
+    expect(checks.filter((c) => !c.correct).map((c) => c.pointsTo)).toEqual([
+      "main paper › Experiments on the Cityscapes dataset",
+    ]);
+  });
+});
+
 describe("scoreSections", () => {
   it("only scores main-paper citations, against the acceptable sections", () => {
     const checks = scoreSections("x [2] y [5] z [10]", citations, ["Introduction", "Related Work"]);

@@ -69,6 +69,7 @@ async function main() {
   const evalDir = path.resolve(__dirname, "../../eval");
   const spec = JSON.parse(fs.readFileSync(path.join(evalDir, "questions.json"), "utf8")) as {
     papers: Record<string, PaperSpec>;
+    magnetSections: string[];
     questions: Question[];
   };
   const questions = spec.questions.filter((q) => !args.only.length || args.only.includes(q.id));
@@ -110,7 +111,12 @@ async function main() {
         error: res.status === "error" ? res.error : undefined,
         answer,
         citations,
-        sectionChecks: scoreSections(answer, citations, q.acceptableSections),
+        // A comparison answer has to describe MagNet's own side too.
+        sectionChecks: scoreSections(
+          answer,
+          citations,
+          q.type === "comparison" ? [...q.acceptableSections, ...spec.magnetSections] : q.acceptableSections
+        ),
         namedChecks: q.namedPapers
           ? scoreNamedCitations(answer, citations, spec.papers, q.namedPapers, q.acceptableSections)
           : [],
