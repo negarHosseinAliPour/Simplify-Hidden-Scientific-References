@@ -1,3 +1,5 @@
+import { bibliographyLabels, resolveBibRefs } from "./bib-refs";
+
 /**
  * Parse sections from GROBID full document XML
  * Extracts: Abstract, Introduction, Methods, Results, Discussion, Conclusion, etc.
@@ -17,12 +19,18 @@ export function parseSectionsFromGrobidXML(xml: string): Array<{ section: string
         return undefined;
     };
 
+    // The paper's own references ("[5]") look exactly like evidence citations, so
+    // replace them with readable labels before the text reaches the answer agent.
+    const labels = bibliographyLabels(xml);
+    const toText = (fragment: string) =>
+        resolveBibRefs(fragment, labels).replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').replace(/\s+([.,;:)])/g, '$1').trim();
+
     try {
         // Extract abstract
         const abstractMatch = xml.match(/<abstract[^>]*>([\s\S]*?)<\/abstract>/i);
         if (abstractMatch) {
             // Remove XML tags but keep text
-            const abstractText = abstractMatch[1].replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+            const abstractText = toText(abstractMatch[1]);
             if (abstractText.length > 50) {
                 const page = extractPageNumber(abstractMatch[0]);
                 sections.push({ section: 'Abstract', text: abstractText, page });
@@ -47,7 +55,7 @@ export function parseSectionsFromGrobidXML(xml: string): Array<{ section: string
                     const sectionName = headMatch[1].trim();
 
                     // Extract section text (remove XML tags)
-                    const sectionText = divContent.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+                    const sectionText = toText(divContent);
 
                     if (sectionText.length > 100) {
                         // Try to get page number from div or head element

@@ -1,5 +1,6 @@
 import type OpenAI from "openai";
 import { getLLMClient, getLLMConfig } from "../../llm/config";
+import { neutralizeNumericRefs } from "../a1/bib-refs";
 import dotenv from "dotenv";
 
 dotenv.config();
@@ -252,7 +253,8 @@ async function executeFunction(
         success: true,
         count: evidence.length,
         evidence: evidence.map((e, idx) => {
-          const raw = (e.text || "");
+          // Numeric references inside paper text ("[5]") must not look like evidence IDs.
+          const raw = neutralizeNumericRefs(e.text || "");
           const preview = raw
             .replace(/\s+/g, " ")
             .trim()
@@ -291,7 +293,7 @@ async function executeFunction(
           return { index: idx, error: "Invalid index" };
         }
         const e = evidence[idx];
-        const full = (e.text || "No content");
+        const full = neutralizeNumericRefs(e.text || "No content");
         const truncated = full.length > max_chars ? full.slice(0, max_chars) + "\n[... truncated ...]" : full;
         return {
           index: idx,
@@ -611,6 +613,7 @@ Citation rules:
 - Put citations immediately after the supported claim: "... [3]" (not as a dangling sentence).
 - Multiple sources can be stacked: "... [0][4]".
 - Every bracket marker must be a valid evidence index from get_evidence.
+- Evidence text refers to other papers as "(ref: Author Year, "Title")" or "(ref 5)". These are the paper's own bibliography, NOT evidence indices. Never turn them into bracket markers. When you mention such a paper, cite the evidence chunk that contains the claim, or that paper's own external chunk if get_evidence lists it.
 
 Grounding:
 - Use ONLY the provided evidence. If a detail isn't supported, say so.

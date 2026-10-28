@@ -17,7 +17,7 @@ const evidence: Evidence[] = [
     authors: ["Vaswani, A.", "Shazeer, N."],
     year: "2017",
     journal: "NeurIPS",
-    text: "The Transformer relies entirely on self-attention.",
+    text: "The Transformer relies entirely on self-attention, unlike recurrent models [5].",
     source_type: "pdf",
     is_main_paper: true,
   },
@@ -111,4 +111,21 @@ describe("A2 answer agent (mocked LLM)", () => {
     expect(result.status).toBe("error");
     expect(result.error).toMatch(/synthesize/i);
   });
+
+  it("never shows the model the paper's own reference numbers as bracket markers", async () => {
+    create
+      .mockResolvedValueOnce(toolCall("get_evidence", {}))
+      .mockResolvedValueOnce(toolCall("analyze_evidence", { indices: [0] }))
+      .mockResolvedValueOnce(toolCall("synthesize_answer", { answer_text: "Self-attention only [0].", cited_indices: [0] }))
+      .mockResolvedValueOnce(finalReply());
+
+    await run(task());
+
+    // The tool results the model saw are the "tool" messages in later calls.
+    const lastCall = create.mock.calls[create.mock.calls.length - 1][0];
+    const toolOutputs = lastCall.messages.filter((m: any) => m.role === "tool").map((m: any) => m.content).join("\n");
+    expect(toolOutputs).toContain("(ref 5)");
+    expect(toolOutputs).not.toContain("models [5]");
+  });
 });
+
