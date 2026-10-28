@@ -9,6 +9,8 @@
 //   LLM_BASE_URL      override the endpoint (required for "custom")
 //   LLM_MODEL_FAST    model for cheap steps: planning, citation parsing, answer writing
 //   LLM_MODEL_STRONG  model for the evidence-gathering tool loop in A1
+//   LLM_MAX_RETRIES   retries on rate limits (429) and overloaded servers (5xx), default 5
+//   LLM_TIMEOUT_MS    per-request timeout in milliseconds, default 120000
 import "dotenv/config";
 import OpenAI from "openai";
 import { setDefaultOpenAIClient, setOpenAIAPI, setTracingDisabled } from "@openai/agents";
@@ -19,7 +21,7 @@ const GEMINI_BASE_URL = "https://generativelanguage.googleapis.com/v1beta/openai
 
 const DEFAULT_MODELS: Record<Provider, { fast: string; strong: string }> = {
   openai: { fast: "gpt-4o-mini", strong: "gpt-4o" },
-  gemini: { fast: "gemini-2.5-flash", strong: "gemini-2.5-flash" },
+  gemini: { fast: "gemini-flash-lite-latest", strong: "gemini-flash-lite-latest" },
   custom: { fast: "", strong: "" },
 };
 
@@ -28,6 +30,15 @@ export interface LLMConfig {
   apiKey: string;
   baseURL?: string;
   models: { fast: string; strong: string };
+  maxRetries: number;
+  timeoutMs: number;
+}
+
+function positiveInt(value: string | undefined, fallback: number, name: string): number {
+  if (value === undefined || value === "") return fallback;
+  const n = Number(value);
+  if (!Number.isInteger(n) || n < 0) throw new Error(`${name} must be a non-negative integer (got "${value}").`);
+  return n;
 }
 
 function detectProvider(env: NodeJS.ProcessEnv): Provider {
@@ -68,7 +79,10 @@ export function loadLLMConfig(env: NodeJS.ProcessEnv = process.env): LLMConfig {
     throw new Error("Set LLM_MODEL_FAST (and optionally LLM_MODEL_STRONG) for a custom provider.");
   }
 
-  return { provider, apiKey, baseURL, models: { fast, strong } };
+  const maxRetries = positiveInt(env.LLM_MAX_RETRIES, 5, "LLM_MAX_RETRIES");
+  const timeoutMs = positiveInt(env.LLM_TIMEOUT_MS, 120_000, "LLM_TIMEOUT_MS");
+
+  return { provider, apiKey, baseURL, models: { fast, strong }, maxRetries, timeoutMs };
 }
 
 let cachedConfig: LLMConfig | null = null;
@@ -80,11 +94,15 @@ export function getLLMConfig(): LLMConfig {
   return cachedConfig;
 }
 
-/** Shared OpenAI-compatible client used by A1 and A2. */
+/**
+ * Shared OpenAI-compatible client used by A0, A1 and A2.
+ * The SDK retries 408/409/429 and 5xx responses with exponential backoff,
+ * which absorbs short "model overloaded" spikes on free tiers.
+ */
 export function getLLMClient(): OpenAI {
   if (!cachedClient) {
-    const { apiKey, baseURL } = getLLMConfig();
-    cachedClient = new OpenAI({ apiKey, baseURL });
+    const { apiKey, baseURL, maxRetries, timeoutMs } = getLLMConfig();
+    cachedClient = new OpenAI({ apiKey, baseURL, maxRetries, timeout: timeoutMs });
   }
   return cachedClient;
 }

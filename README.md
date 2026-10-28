@@ -116,8 +116,8 @@ RefHunters talks to any OpenAI-compatible endpoint, so switching provider needs 
 ```env
 LLM_PROVIDER=gemini            # openai | gemini | custom
 GEMINI_API_KEY=your_key_here   # or OPENAI_API_KEY / LLM_API_KEY
-LLM_MODEL_FAST=gemini-2.5-flash
-LLM_MODEL_STRONG=gemini-2.5-flash
+LLM_MODEL_FAST=gemini-flash-lite-latest
+LLM_MODEL_STRONG=gemini-flash-lite-latest
 PORT=3001
 GROBID_URL=http://localhost:8070
 ```

@@ -51,4 +51,17 @@ describe("loadLLMConfig", () => {
     expect(cfg.baseURL).toBe("http://localhost:11434/v1");
     expect(cfg.models.strong).toBe("llama3.1");
   });
+
+  it("retries 5 times with a 2-minute timeout by default, and both are configurable", () => {
+    const d = loadLLMConfig(env({ OPENAI_API_KEY: "k" }));
+    expect(d.maxRetries).toBe(5);
+    expect(d.timeoutMs).toBe(120_000);
+    const c = loadLLMConfig(env({ OPENAI_API_KEY: "k", LLM_MAX_RETRIES: "0", LLM_TIMEOUT_MS: "30000" }));
+    expect(c.maxRetries).toBe(0);
+    expect(c.timeoutMs).toBe(30_000);
+  });
+
+  it("rejects a retry count that is not a whole number", () => {
+    expect(() => loadLLMConfig(env({ OPENAI_API_KEY: "k", LLM_MAX_RETRIES: "lots" }))).toThrow(/LLM_MAX_RETRIES/);
+  });
 });

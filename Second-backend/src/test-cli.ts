@@ -1,5 +1,6 @@
 
 import { runA0 } from "./agents/a0/a0";
+import { getLLMConfig } from "./llm/config";
 import dotenv from "dotenv";
 import path from "path";
 
@@ -29,7 +30,9 @@ async function main() {
     }
 
     const sessionId = `cli-test-${Date.now()}`;
+    const llm = getLLMConfig();
     console.log(`\n🚀 Starting CLI Test (Session: ${sessionId})`);
+    console.log(`🤖 LLM: ${llm.provider} · fast=${llm.models.fast} · strong=${llm.models.strong} · retries=${llm.maxRetries}`);
     console.log(`❓ Query: "${query}"`);
     if (pdfPath) console.log(`📄 PDF: ${pdfPath}`);
 
