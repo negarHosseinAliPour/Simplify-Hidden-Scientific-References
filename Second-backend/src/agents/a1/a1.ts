@@ -5,6 +5,7 @@ import type OpenAI from "openai";
 import { getLLMClient, getLLMConfig } from "../../llm/config";
 import { parseLLMJson } from "../../utils";
 import { parseSectionsFromGrobidXML } from "./sections-parser.js";
+import { parseHeaderFromGrobidXML } from "./header-parser";
 import { extractCitationMarkersFromSection, mapCitationIdsToIndices } from "./citation-extractor.js";
 import dotenv from "dotenv";
 const pdfParse = require("pdf-parse");
@@ -1338,6 +1339,14 @@ export async function run(task: A1Task): Promise<A1Result> {
       const grobidResult = await extractFullDocumentGrobid(mainPaperPath);
 
       if (grobidResult && grobidResult.xml) {
+        // Use the paper's real title, authors and year from the GROBID header,
+        // falling back to the file name when GROBID could not read them.
+        const header = parseHeaderFromGrobidXML(grobidResult.xml);
+        const mainTitle = header.title || cleanTitle;
+        const mainAuthors = header.authors;
+        const mainYear = header.year || "";
+        console.log(`[A1]  Main paper: "${mainTitle}" (${mainAuthors.length} authors, ${mainYear || "year unknown"})`);
+
         // Parse sections from XML
         const sections = parseSectionsFromGrobidXML(grobidResult.xml);
 
@@ -1348,9 +1357,9 @@ export async function run(task: A1Task): Promise<A1Result> {
           for (let i = 0; i < sections.length; i++) {
             const section = sections[i];
             const sectionEvidence: Evidence = {
-              title: cleanTitle,
-              authors: [], // Leave empty for main paper
-              year: "",
+              title: mainTitle,
+              authors: mainAuthors,
+              year: mainYear,
               journal: "Main Paper",
               text: section.text,
               source_type: "pdf",
@@ -1369,9 +1378,9 @@ export async function run(task: A1Task): Promise<A1Result> {
           // Fallback to simple full text if Grobid didn't find sections
           if (extracted.fullText) {
             evidence.push({
-              title: cleanTitle,
-              authors: [],
-              year: "",
+              title: mainTitle,
+              authors: mainAuthors,
+              year: mainYear,
               journal: "Main Paper",
               text: extracted.fullText,
               source_type: "pdf",

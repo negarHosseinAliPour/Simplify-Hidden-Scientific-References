@@ -3,6 +3,11 @@
 .env.*
 !.env.example
 
+# GROBID output written at runtime
+grobid_output.xml
+grobid-output/
+Second-backend/grobid-output/
+
 # Dependencies and build output
 node_modules/
 dist/

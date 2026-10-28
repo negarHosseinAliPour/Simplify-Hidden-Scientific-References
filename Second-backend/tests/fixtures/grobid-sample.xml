@@ -1,6 +1,23 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <TEI xmlns="http://www.tei-c.org/ns/1.0">
   <teiHeader>
+    <fileDesc>
+      <titleStmt>
+        <title level="a" type="main">Grounded Answers for Scientific Papers</title>
+      </titleStmt>
+      <publicationStmt>
+        <date type="published" when="2021-06-01">June 2021</date>
+      </publicationStmt>
+      <sourceDesc>
+        <biblStruct>
+          <analytic>
+            <author><persName><forename type="first">Chuong</forename><surname>Huynh</surname></persName></author>
+            <author><persName><forename type="first">Anh</forename><forename type="middle">Tuan</forename><surname>Tran</surname></persName></author>
+            <author><persName><forename type="first">Khoa</forename><surname>Luu</surname></persName></author>
+          </analytic>
+        </biblStruct>
+      </sourceDesc>
+    </fileDesc>
     <profileDesc>
       <abstract>
         <div coords="1,50,300,500,120"><p>We study how retrieval-augmented generation can ground answers about scientific papers in the exact passages they come from, reducing unsupported claims.</p></div>
@@ -15,7 +32,7 @@
     </body>
     <back>
       <listBibl>
-        <biblStruct xml:id="b0"><analytic><title>Retrieval-Augmented Generation</title></analytic></biblStruct>
+        <biblStruct xml:id="b0"><analytic><title>Retrieval-Augmented Generation</title><author><persName><forename>Patrick</forename><surname>Lewis</surname></persName></author></analytic></biblStruct>
         <biblStruct xml:id="b1"><analytic><title>Dense Passage Retrieval</title></analytic></biblStruct>
         <biblStruct xml:id="b2"><analytic><title>Attributed Question Answering</title></analytic></biblStruct>
       </listBibl>

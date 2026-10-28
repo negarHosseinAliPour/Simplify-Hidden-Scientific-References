@@ -1,6 +1,7 @@
 
 import { runA0 } from "./agents/a0/a0";
 import { getLLMConfig } from "./llm/config";
+import { formatCitationLine } from "./citation-display";
 import dotenv from "dotenv";
 import path from "path";
 
@@ -53,7 +54,7 @@ async function main() {
         if (result.citations && result.citations.length > 0) {
             console.log(`\n📚 Citations (${result.citations.length}):`);
             result.citations.forEach((c: any, i: number) => {
-                console.log(`[${i + 1}] ${c.title} (${c.year})`);
+                console.log(formatCitationLine(i + 1, c));
             });
         }
 
