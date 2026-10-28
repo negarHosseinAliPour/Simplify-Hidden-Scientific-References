@@ -1,0 +1,47 @@
+# Run the whole RefHunters stack with one command:
+#   docker compose up --build
+# Then open http://localhost:8080
+#
+# Needs Second-backend/.env with your LLM key (copy Second-backend/.env.example).
+
+services:
+  redis:
+    image: redis:7-alpine
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      retries: 10
+
+  grobid:
+    # Lightweight CRF image: a few hundred MB instead of ~10 GB, and native on
+    # Apple Silicon. For the full deep-learning models use grobid/grobid:0.9.1-full.
+    image: grobid/grobid:0.9.1-crf
+
+  backend:
+    build: ./Second-backend
+    env_file: ./Second-backend/.env
+    environment:
+      # Inside Docker the services find each other by name, not localhost.
+      GROBID_URL: http://grobid:8070
+      REDIS_URL: redis://redis:6379
+    ports:
+      - "3001:3001"
+    volumes:
+      - uploads:/app/uploads
+      - grobid-cache:/app/grobid-output
+    depends_on:
+      redis:
+        condition: service_healthy
+      grobid:
+        condition: service_started
+
+  frontend:
+    build: ./Second-Frontend
+    ports:
+      - "8080:80"
+    depends_on:
+      - backend
+
+volumes:
+  uploads:
+  grobid-cache:

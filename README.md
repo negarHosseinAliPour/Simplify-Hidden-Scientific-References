@@ -58,12 +58,25 @@ Think of it as having a research assistant that reads papers for you and answers
 
 ## Quick Start
 
-### Prerequisites
+### Option A: Docker (one command)
 
-- Node.js (v16+)
+Requires Docker and an LLM key (the free Gemini tier works).
+
+```bash
+cp Second-backend/.env.example Second-backend/.env   # add your key
+docker compose up --build
+```
+
+Open **http://localhost:8080**. This starts Redis, GROBID, the backend and the frontend together.
+
+### Option B: Run locally
+
+#### Prerequisites
+
+- Node.js (v20+)
 - Redis server
 - GROBID service (Docker)
-- OpenAI API key
+- A Gemini or OpenAI API key
 
 ### 1. Setup Backend
 

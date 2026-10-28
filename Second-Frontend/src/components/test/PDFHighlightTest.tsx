@@ -26,15 +26,6 @@ export default function PDFHighlightTest() {
     const testMagNetHighlight = () => {
         addTestResult('🔍 Test 1: Searching for "MagNet" section...')
 
-        const mockCitation = {
-            index: 1,
-            title: 'Main Paper',
-            evidenceChunk: {
-                section: 'MagNet',
-                is_main_paper: true
-            }
-        }
-
         // Trigger search-based highlighting
         setHighlights([{
             pageNumber: 0,  // Will be found by search

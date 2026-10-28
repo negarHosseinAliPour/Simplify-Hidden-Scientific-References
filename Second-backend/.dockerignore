@@ -1,0 +1,7 @@
+node_modules
+dist
+.env
+uploads
+grobid-output
+tests
+*.log

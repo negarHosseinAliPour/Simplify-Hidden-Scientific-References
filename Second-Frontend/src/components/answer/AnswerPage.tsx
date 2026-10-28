@@ -41,7 +41,7 @@ export default function AnswerPage() {
             return
         }
 
-        const { section, text, locations } = citation.evidenceChunk
+        const { section, locations } = citation.evidenceChunk
         console.log('[Citation Click]  Main paper citation - will search for text in PDF')
         setActiveCitationIndex(citation.index)
 
