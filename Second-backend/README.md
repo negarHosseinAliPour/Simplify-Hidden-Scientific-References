@@ -63,12 +63,12 @@ Check if the backend is running.
    npm install
    ```
 
-2. **Configure environment** (create `.env` file):
-   ```env
-   OPENAI_API_KEY=your_key_here
-   PORT=3001
-   GROBID_URL=http://localhost:8070
+2. **Configure environment**:
+   ```bash
+   cp .env.example .env
    ```
+   Then set one provider (Gemini, OpenAI or any OpenAI-compatible endpoint).
+   All model names are read from `.env` by `src/llm/config.ts`.
 
 3. **Run the server**:
    ```bash

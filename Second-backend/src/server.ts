@@ -9,16 +9,16 @@ import { runA0 } from "./agents/a0/a0";
 import { run as runA1 } from "./agents/a1/a1";
 import { run as runA2 } from "./agents/a2/a2";
 import { GlobalMemory } from "./memory/GlobalMemory";
+import { getLLMConfig } from "./llm/config";
 
 dotenv.config();
 
-// Check for required environment variables
-if (!process.env.OPENAI_API_KEY) {
-  console.error("\n❌ ERROR: OPENAI_API_KEY is required but not found!");
-  console.error("Please create a .env file in the project root with:");
-  console.error("  OPENAI_API_KEY=your_openai_api_key_here\n");
-  console.error("Or set it as an environment variable:");
-  console.error("  export OPENAI_API_KEY=your_openai_api_key_here\n");
+// Fail fast with a clear message if the LLM provider is not configured.
+try {
+  const { provider, models } = getLLMConfig();
+  console.log(`LLM provider: ${provider} (fast: ${models.fast}, strong: ${models.strong})`);
+} catch (err) {
+  console.error(`\n❌ ${(err as Error).message}\n`);
   process.exit(1);
 }
 

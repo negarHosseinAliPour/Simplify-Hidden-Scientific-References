@@ -68,7 +68,7 @@ Think of it as having a research assistant that reads papers for you and answers
 ```bash
 cd Second-backend
 npm install
-cp .env.example .env  # Add your OPENAI_API_KEY
+cp .env.example .env  # Add your Gemini or OpenAI key
 npm run dev
 ```
 
@@ -108,11 +108,19 @@ See **[OPERATIONS_GUIDE.md](./OPERATIONS_GUIDE.md)** for detailed commands to st
 ## Environment Variables
 
 ### Backend (.env)
+Copy `Second-backend/.env.example` to `Second-backend/.env` and pick one LLM provider.
+RefHunters talks to any OpenAI-compatible endpoint, so switching provider needs no code change:
+
 ```env
-OPENAI_API_KEY=your_key_here
+LLM_PROVIDER=gemini            # openai | gemini | custom
+GEMINI_API_KEY=your_key_here   # or OPENAI_API_KEY / LLM_API_KEY
+LLM_MODEL_FAST=gemini-2.5-flash
+LLM_MODEL_STRONG=gemini-2.5-flash
 PORT=3001
 GROBID_URL=http://localhost:8070
 ```
+
+The free Gemini tier from Google AI Studio is enough to run the app without billing.
 
 ### Frontend (.env)
 ```env

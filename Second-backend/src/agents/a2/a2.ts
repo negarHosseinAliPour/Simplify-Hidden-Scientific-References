@@ -1,24 +1,11 @@
-import OpenAI from "openai";
+import type OpenAI from "openai";
+import { getLLMClient, getLLMConfig } from "../../llm/config";
 import dotenv from "dotenv";
 
 dotenv.config();
 
-// Lazy initialization of OpenAI client to avoid errors if API key is missing
-let openai: OpenAI | null = null;
-
-function getOpenAIClient(): OpenAI {
-  if (!openai) {
-    const apiKey = process.env.OPENAI_API_KEY;
-    if (!apiKey) {
-      throw new Error(
-        "OPENAI_API_KEY is required. Please set it in .env file or environment variables.\n" +
-        "Create a .env file in the project root with: OPENAI_API_KEY=your_key_here"
-      );
-    }
-    openai = new OpenAI({ apiKey });
-  }
-  return openai;
-}
+// The client and model names come from src/llm/config.ts (configured via .env).
+const getOpenAIClient = getLLMClient;
 
 // TYPES (matching A0's expectations)
 export interface TextLocation {
@@ -657,7 +644,7 @@ ${mappedExpertise === "expert" ? "- Comprehensive and scientific. Include nuance
     console.log(`\n[A2 ITERATION ${iteration}/${maxIterations}]`);
 
     const response = await getOpenAIClient().chat.completions.create({
-      model: "gpt-4o-mini",
+      model: getLLMConfig().models.fast,
       messages,
       tools,
       tool_choice: "auto",

@@ -1,7 +1,8 @@
 import * as fs from "fs";
 import * as path from "path";
 import axios from "axios";
-import OpenAI from "openai";
+import type OpenAI from "openai";
+import { getLLMClient, getLLMConfig } from "../../llm/config";
 import { parseLLMJson } from "../../utils";
 import { parseSectionsFromGrobidXML } from "./sections-parser.js";
 import { extractCitationMarkersFromSection, mapCitationIdsToIndices } from "./citation-extractor.js";
@@ -10,22 +11,8 @@ const pdfParse = require("pdf-parse");
 
 dotenv.config();
 
-// Lazy initialization of OpenAI client to avoid errors if API key is missing
-let openai: OpenAI | null = null;
-
-function getOpenAIClient(): OpenAI {
-  if (!openai) {
-    const apiKey = process.env.OPENAI_API_KEY;
-    if (!apiKey) {
-      throw new Error(
-        "OPENAI_API_KEY is required. Please set it in .env file or environment variables.\n" +
-        "Create a .env file in the project root with: OPENAI_API_KEY=your_key_here"
-      );
-    }
-    openai = new OpenAI({ apiKey });
-  }
-  return openai;
-}
+// The client and model names come from src/llm/config.ts (configured via .env).
+const getOpenAIClient = getLLMClient;
 
 // TYPES (matching A0's expectations)
 export interface Citation {
@@ -435,7 +422,7 @@ ${blob}`;
 
   try {
     const response = await getOpenAIClient().chat.completions.create({
-      model: "gpt-4o-mini",
+      model: getLLMConfig().models.fast,
       messages: [{ role: "user", content: msg }],
       temperature: 0,
     });
@@ -1262,7 +1249,7 @@ Stop once you collected enough evidence (topK). Avoid redundant tool calls.`,
     console.log(`\n[A1 ITERATION ${iteration}/${maxIterations}]`);
 
     const response = await getOpenAIClient().chat.completions.create({
-      model: "gpt-4o",
+      model: getLLMConfig().models.strong,
       messages,
       tools,
       tool_choice: "auto",

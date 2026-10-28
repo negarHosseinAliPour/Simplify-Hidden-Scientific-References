@@ -12,7 +12,8 @@
 //   Memory: src/memory/GlobalMemory.ts
 import "dotenv/config";
 
-import { Agent, run, setDefaultOpenAIKey } from "@openai/agents";
+import { Agent, run } from "@openai/agents";
+import { configureAgentsSdk, getLLMConfig } from "../../llm/config";
 
 import { run as runA1, type A1Task, type Evidence } from "../a1/a1";
 import { run as runA2, type A2Task, type A2Result } from "../a2/a2";
@@ -20,7 +21,7 @@ import { run as runA2, type A2Task, type A2Result } from "../a2/a2";
 import { GlobalMemory, Namespaces } from "../../memory/GlobalMemory";
 import { parseLLMJson } from "../../utils";
 
-setDefaultOpenAIKey(process.env.OPENAI_API_KEY!);
+configureAgentsSdk();
 
 /* =========================
    A0 POLICY PLANNER (NO ANSWERS)
@@ -34,7 +35,7 @@ type PolicyPlan = {
 
 const Planner = new Agent({
   name: "A0-Planner",
-  model: "gpt-4o-mini",
+  model: getLLMConfig().models.fast,
   instructions: `You are A0 (controller). You never answer questions.
 You only decide policy and retrieval permission.
 
