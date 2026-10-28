@@ -73,5 +73,14 @@ describe("page numbers from heading coordinates", () => {
     expect(section.section).toBe("Method");
     expect(section.page).toBe(5);
   });
+
+  it("puts the abstract on page 1 when GROBID gives it no coordinates", () => {
+    const text = "This abstract has more than fifty characters so that the parser keeps it as a section.";
+    const body = "Long enough text about the method that is definitely more than one hundred characters long so it is kept as a section.";
+    const doc = `<TEI><abstract><p>${text}</p></abstract><text><body><div><head coords="3,1,1,1,1">Method</head><p>${body}</p></div></body></text></TEI>`;
+    const sections = parseSectionsFromGrobidXML(doc);
+    expect(sections.find((s) => s.section === "Abstract")?.page).toBe(1);
+    expect(sections.find((s) => s.section === "Method")?.page).toBe(3);
+  });
 });
 

@@ -76,6 +76,9 @@ export function parseSectionsFromGrobidXML(xml: string): Array<{ section: string
                 console.log(`[A1]    Estimated ${section.section} → page ${section.page}`);
             });
         }
+        // GROBID gives no heading coordinates for the abstract, but it is always on page 1.
+        const abstract = sections.find(section => section.section === 'Abstract');
+        if (abstract && abstract.page === undefined) abstract.page = 1;
     } catch (error) {
         console.error("[A1]  Failed to parse sections:", error);
     }
