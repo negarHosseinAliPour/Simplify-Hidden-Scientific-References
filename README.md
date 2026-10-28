@@ -1,5 +1,7 @@
 # RefHunters
 
+[![CI](https://github.com/negarHosseinAliPour/Simplify-Hidden-Scientific-References/actions/workflows/ci.yml/badge.svg)](https://github.com/negarHosseinAliPour/Simplify-Hidden-Scientific-References/actions/workflows/ci.yml)
+
 **RefHunters** is an AI-powered research assistant that helps you understand scientific papers. Upload a PDF, ask questions, and get intelligent answers with precise citations.
 
 ## What Is RefHunters?
@@ -126,6 +128,23 @@ The free Gemini tier from Google AI Studio is enough to run the app without bill
 ```env
 VITE_API_URL=http://localhost:3001
 ```
+
+## Testing
+
+The backend has an automated test suite (Vitest) that runs on every push through GitHub Actions.
+LLM calls are replaced by a scripted fake client, so the tests are deterministic, need no API key and cost nothing.
+
+```bash
+cd Second-backend
+npm test          # run all tests once
+npm run typecheck # TypeScript checks
+```
+
+What is covered:
+- **LLM configuration**: provider detection, model overrides and clear errors for missing keys
+- **GROBID parsing**: section extraction, page numbers and per-section citation mapping
+- **LLM output parsing**: JSON wrapped in markdown or extra text
+- **Agent A2's tool loop**: answer synthesis, removal of citations to non-existent evidence, and error paths
 
 ## Tech Stack
 

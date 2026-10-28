@@ -1,0 +1,32 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  backend:
+    name: Backend type-check and tests
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: Second-backend
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: Second-backend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Type-check
+        run: npm run typecheck
+
+      # The LLM is mocked in tests, so no API key is needed and CI costs nothing.
+      - name: Run tests
+        run: npm test

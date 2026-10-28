@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<TEI xmlns="http://www.tei-c.org/ns/1.0">
+  <teiHeader>
+    <profileDesc>
+      <abstract>
+        <div coords="1,50,300,500,120"><p>We study how retrieval-augmented generation can ground answers about scientific papers in the exact passages they come from, reducing unsupported claims.</p></div>
+      </abstract>
+    </profileDesc>
+  </teiHeader>
+  <text>
+    <body>
+      <div coords="1,50,450,500,300"><head>Introduction</head><p>Large language models often produce fluent but unsupported statements when asked about research papers. Prior work on retrieval <ref type="bibr" target="#b0">[1]</ref> and on citation grounding <ref type="bibr" target="#b2">[3]</ref> motivates our approach.</p></div>
+      <div coords="2,50,100,500,300"><head>Related Work</head><p>Dense retrieval methods <ref type="bibr" target="#b1">[2]</ref> and hybrid search <ref type="bibr" target="#b2">[3]</ref> have both been used to build assistants that answer questions over large collections of scientific documents with references.</p></div>
+      <div><head>Short</head><p>Too short to keep.</p></div>
+    </body>
+    <back>
+      <listBibl>
+        <biblStruct xml:id="b0"><analytic><title>Retrieval-Augmented Generation</title></analytic></biblStruct>
+        <biblStruct xml:id="b1"><analytic><title>Dense Passage Retrieval</title></analytic></biblStruct>
+        <biblStruct xml:id="b2"><analytic><title>Attributed Question Answering</title></analytic></biblStruct>
+      </listBibl>
+    </back>
+  </text>
+</TEI>
