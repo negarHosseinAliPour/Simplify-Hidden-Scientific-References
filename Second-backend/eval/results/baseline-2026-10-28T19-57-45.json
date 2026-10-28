@@ -1,0 +1,1075 @@
+{
+  "summary": {
+    "label": "baseline",
+    "model": "gemini/gemini-flash-lite-latest",
+    "date": "2026-10-28T19:57:45.973Z",
+    "questions": 18,
+    "errors": 0,
+    "sectionPrecision": {
+      "inPaper": 0.6896551724137931,
+      "comparison": 0.7857142857142857
+    },
+    "namedCitationAccuracy": 0.72,
+    "namedCitations": 25,
+    "externalUsage": 0.8333333333333334
+  },
+  "results": [
+    {
+      "id": "Q01",
+      "type": "in-paper",
+      "question": "What problem does MagNet try to solve?",
+      "sectionChecks": [
+        {
+          "marker": 1,
+          "correct": true,
+          "pointsTo": "main paper › Abstract"
+        },
+        {
+          "marker": 2,
+          "correct": true,
+          "pointsTo": "main paper › Introduction"
+        }
+      ],
+      "namedChecks": [],
+      "externalCited": false,
+      "seconds": 65.523,
+      "answer": "MagNet is designed to solve the challenge of semantic segmentation on high-resolution and ultra-high-resolution images without overloading GPU memory or losing fine structural details [1][2]. \n\nExisting deep learning techniques typically struggle with high-resolution images because they cannot fit an entire large image into GPU memory in a single feedforward pass [2]. Traditionally, developers resort to two main workarounds, both of which have significant limitations:\n- **Downsampling the image:** This enables the entire image to fit into memory, but it results in a low-resolution segmentation map that lacks the fine details required for applications such as medical imaging or aerial scene analysis [1][2].\n- **Dividing the image into local patches:** While this preserves local pixel details, processing patches independently discards global contextual information, leading to local ambiguities [1][2]. \n\nWhile some prior hybrid approaches attempt to combine global views with local patches, doing so in a single step creates a massive scale gap that is difficult to reconcile [2]. MagNet resolves these problems through a multi-scale, progressive framework that analyzes images across multiple magnification levels (from coarsest to finest) [1][2]. It propagates and progressively refines segmentation information stage-by-stage, utilizing global context to resolve local ambiguities while recovering fine details at higher resolutions [1][2].",
+      "citations": [
+        {
+          "index": 1,
+          "title": "Progressive Semantic Segmentation",
+          "section": "Abstract",
+          "is_main_paper": true
+        },
+        {
+          "index": 2,
+          "title": "Progressive Semantic Segmentation",
+          "section": "Introduction",
+          "is_main_paper": true
+        }
+      ]
+    },
+    {
+      "id": "Q02",
+      "type": "in-paper",
+      "question": "How does the refinement module decide which pixels to refine?",
+      "sectionChecks": [
+        {
+          "marker": 1,
+          "correct": false,
+          "pointsTo": "main paper › MagNet"
+        },
+        {
+          "marker": 2,
+          "correct": true,
+          "pointsTo": "main paper › Refinement module"
+        }
+      ],
+      "namedChecks": [],
+      "externalCited": false,
+      "seconds": 68.775,
+      "answer": "In the MagNet framework, the refinement module decides which pixels to refine by evaluating the prediction uncertainty of two segmentation maps: the cumulative segmentation map from previous stages ($Y$) and an initial combined map ($R$) generated from $Y$ and the current scale-specific map ($O$) [1][2]. \n\nThe decision process involves the following steps:\n- **Uncertainty Calculation:** First, the module computes a prediction confidence for each pixel (defined as the absolute difference between the highest and second-highest class probability values) and converts it into an uncertainty score (where confidence and uncertainty add up to one) for both $Y$ and $R$, denoted as $Y_u$ and $R_u$ respectively [2].\n- **Pixel Selection Criteria:** The refinement module targets specific locations where the previous cumulative map is uncertain ($Y_u$ is high), but the newly combined map is certain ($1 - R_u$ is high) [2]. \n- **Ranking Score Map:** A final ranking score map $Q$ is computed using point-wise multiplication of these two factors, followed by median blurring to smooth the map: $Q = F(Y_u \\odot (1 - R_u))$ [2]. Pixels with the highest ranking scores $Q$ are then selected for refinement [2].",
+      "citations": [
+        {
+          "index": 1,
+          "title": "Progressive Semantic Segmentation",
+          "section": "MagNet",
+          "is_main_paper": true
+        },
+        {
+          "index": 2,
+          "title": "Progressive Semantic Segmentation",
+          "section": "Refinement module",
+          "is_main_paper": true
+        }
+      ]
+    },
+    {
+      "id": "Q03",
+      "type": "in-paper",
+      "question": "What are the inputs and the output of the refinement module?",
+      "sectionChecks": [
+        {
+          "marker": 1,
+          "correct": true,
+          "pointsTo": "main paper › Refinement module"
+        },
+        {
+          "marker": 2,
+          "correct": true,
+          "pointsTo": "main paper › Implementation details"
+        }
+      ],
+      "namedChecks": [],
+      "externalCited": false,
+      "seconds": 63.831,
+      "answer": "In the MagNet framework for progressive semantic segmentation, the refinement module acts as a core component used at every processing stage to improve individual segmentation patches [3, 7]. \n\n* **Inputs:** The refinement module takes two segmentation maps of size $h \\times w \\times C$ (where $h \\times w$ represents spatial dimensions and $C$ represents the number of classes) [1]:\n  1. **The scale-cumulative segmentation map ($Y$):** The accumulated result derived from all previous processing scales [3, 7].\n  2. **The scale-specific segmentation map ($O$):** The result obtained by running the segmentation module exclusively at the current scale [3, 7].\n\n* **Output:** The output of the refinement module is the **updated scale-cumulative segmentation map**, where the previous cumulative map is selectively updated and refined using details from the scale-specific map at regions of high uncertainty [3, 7]. Structurally, the internal network processes an input tensor of size $h \\times w \\times 2C$ (concatenating the input maps) and produces an output tensor of size $h \\times w \\times C$ [2].",
+      "citations": [
+        {
+          "index": 1,
+          "title": "Progressive Semantic Segmentation",
+          "section": "Refinement module",
+          "is_main_paper": true
+        },
+        {
+          "index": 2,
+          "title": "Progressive Semantic Segmentation",
+          "section": "Implementation details",
+          "is_main_paper": true
+        }
+      ]
+    },
+    {
+      "id": "Q04",
+      "type": "in-paper",
+      "question": "How does MagNet-Fast reduce the running time?",
+      "sectionChecks": [
+        {
+          "marker": 1,
+          "correct": true,
+          "pointsTo": "main paper › MagNet-Fast"
+        },
+        {
+          "marker": 2,
+          "correct": false,
+          "pointsTo": "main paper › DeepGlobe"
+        },
+        {
+          "marker": 3,
+          "correct": false,
+          "pointsTo": "main paper › grade lesions on ultra-high-resolution images."
+        }
+      ],
+      "namedChecks": [],
+      "externalCited": false,
+      "seconds": 53.957,
+      "answer": "MagNet-Fast is a variant of the MagNet framework designed to balance accuracy and run-time efficiency [1]. It reduces running time by combining two key optimization approaches [1]:\n\n* **Reducing the number of scales:** It processes images across a smaller number of scale levels compared to the standard framework [1].\n* **Selective patch processing:** Instead of running segmentation and refinement on all image patches, MagNet-Fast selectively targets only a subset of patches at each scale level—specifically, those exhibiting the highest level of prediction uncertainty ($Y_u$) [1]. \n\nFor example, in datasets like DeepGlobe and Gleason, MagNet-Fast restricts its processing at each scale level to only the top three patches with the highest prediction uncertainty [2][3]. By limiting the total number of patches fed into the segmentation module, it significantly lowers computational overhead while still leveraging global context and fine details [1].",
+      "citations": [
+        {
+          "index": 1,
+          "title": "Progressive Semantic Segmentation",
+          "section": "MagNet-Fast",
+          "is_main_paper": true
+        },
+        {
+          "index": 2,
+          "title": "Progressive Semantic Segmentation",
+          "section": "DeepGlobe",
+          "is_main_paper": true
+        },
+        {
+          "index": 3,
+          "title": "Progressive Semantic Segmentation",
+          "section": "grade lesions on ultra-high-resolution images.",
+          "is_main_paper": true
+        }
+      ]
+    },
+    {
+      "id": "Q05",
+      "type": "in-paper",
+      "question": "Which datasets were used to evaluate MagNet and what are their image resolutions?",
+      "sectionChecks": [
+        {
+          "marker": 1,
+          "correct": true,
+          "pointsTo": "main paper › Abstract"
+        },
+        {
+          "marker": 2,
+          "correct": true,
+          "pointsTo": "main paper › Experiments"
+        },
+        {
+          "marker": 3,
+          "correct": true,
+          "pointsTo": "main paper › Content Resolution No.classes"
+        },
+        {
+          "marker": 4,
+          "correct": true,
+          "pointsTo": "main paper › Experiments on the Cityscapes dataset"
+        },
+        {
+          "marker": 5,
+          "correct": true,
+          "pointsTo": "main paper › DeepGlobe"
+        },
+        {
+          "marker": 6,
+          "correct": true,
+          "pointsTo": "main paper › grade lesions on ultra-high-resolution images."
+        }
+      ],
+      "namedChecks": [],
+      "externalCited": false,
+      "seconds": 52.133,
+      "answer": "MagNet was evaluated on three high-resolution datasets covering urban views, aerial scenes, and medical histopathology [1][2][3]:\n\n1. **Cityscapes** (urban scenes): Features an image resolution of $2048 \\times 1024$ pixels [3][4].\n2. **DeepGlobe** (aerial/satellite scenes): Features an image resolution of $2448 \\times 2448$ pixels [3][5].\n3. **Gleason** (histopathology/medical images): Features an ultra-high image resolution of $5000 \\times 5000$ pixels [3][6].\n\nEach of these datasets contains images ranging from 2 million to 25 million pixels [2][3].",
+      "citations": [
+        {
+          "index": 1,
+          "title": "Progressive Semantic Segmentation",
+          "section": "Abstract",
+          "is_main_paper": true
+        },
+        {
+          "index": 2,
+          "title": "Progressive Semantic Segmentation",
+          "section": "Experiments",
+          "is_main_paper": true
+        },
+        {
+          "index": 3,
+          "title": "Progressive Semantic Segmentation",
+          "section": "Content Resolution No.classes",
+          "is_main_paper": true
+        },
+        {
+          "index": 4,
+          "title": "Progressive Semantic Segmentation",
+          "section": "Experiments on the Cityscapes dataset",
+          "is_main_paper": true
+        },
+        {
+          "index": 5,
+          "title": "Progressive Semantic Segmentation",
+          "section": "DeepGlobe",
+          "is_main_paper": true
+        },
+        {
+          "index": 6,
+          "title": "Progressive Semantic Segmentation",
+          "section": "grade lesions on ultra-high-resolution images.",
+          "is_main_paper": true
+        }
+      ]
+    },
+    {
+      "id": "Q06",
+      "type": "in-paper",
+      "question": "What mIoU does MagNet reach on Cityscapes and how much does it improve over downsampling?",
+      "sectionChecks": [
+        {
+          "marker": 1,
+          "correct": true,
+          "pointsTo": "main paper › Experiments on the Cityscapes dataset"
+        },
+        {
+          "marker": 2,
+          "correct": true,
+          "pointsTo": "main paper › Benefits of multiple scale levels"
+        },
+        {
+          "marker": 3,
+          "correct": false,
+          "pointsTo": "main paper › Abstract"
+        },
+        {
+          "marker": 4,
+          "correct": false,
+          "pointsTo": "main paper › Introduction"
+        }
+      ],
+      "namedChecks": [],
+      "externalCited": false,
+      "seconds": 57.117,
+      "answer": "On the Cityscapes dataset, standard downsampling forces high-resolution images to fit into GPU memory constraints by reducing them to a lower resolution, which results in a baseline mean Intersection over Union (mIoU) of 63.23% [1][2]. \n\nMagNet addresses this limitation by using a multi-scale framework that progressively propagates coarse-to-fine information across multiple magnification levels [3]. Specifically:\n* **Direct Refinement:** Using a two-stage approach (lowest to highest scale) improves the baseline mIoU by about 2%, moving from 63.23% to 65.23% [2].\n* **Full Multi-Scale Processing:** Adding two intermediate scale levels between the smallest and largest scales boosts the overall performance by **4.34% mIoU** [2], culminating in a final mIoU of **67.57%**.\n\n### Key Takeaways\n* **Memory vs. Detail Trade-off:** Simple downsampling loses fine structural details [3][4], whereas MagNet recovers these lost details by inspecting images progressively across multiple scales [3].\n* **Stage-by-Stage Improvement:** Introducing intermediate magnification levels allows the framework to successively refine segmentation masks and reduce errors at selective high-uncertainty points [2].",
+      "citations": [
+        {
+          "index": 1,
+          "title": "Progressive Semantic Segmentation",
+          "section": "Experiments on the Cityscapes dataset",
+          "is_main_paper": true
+        },
+        {
+          "index": 2,
+          "title": "Progressive Semantic Segmentation",
+          "section": "Benefits of multiple scale levels",
+          "is_main_paper": true
+        },
+        {
+          "index": 3,
+          "title": "Progressive Semantic Segmentation",
+          "section": "Abstract",
+          "is_main_paper": true
+        },
+        {
+          "index": 4,
+          "title": "Progressive Semantic Segmentation",
+          "section": "Introduction",
+          "is_main_paper": true
+        }
+      ]
+    },
+    {
+      "id": "Q07",
+      "type": "in-paper",
+      "question": "Why are the intermediate scale levels important in MagNet?",
+      "sectionChecks": [
+        {
+          "marker": 1,
+          "correct": false,
+          "pointsTo": "main paper › Abstract"
+        },
+        {
+          "marker": 2,
+          "correct": true,
+          "pointsTo": "main paper › Benefits of multiple scale levels"
+        }
+      ],
+      "namedChecks": [],
+      "externalCited": false,
+      "seconds": 52.923,
+      "answer": "In MagNet, intermediate scale levels play a crucial role in bridging the gap between coarse global context and fine-grained local details, facilitating a smooth coarse-to-fine information propagation pipeline [1][2]. \n\nWhen processing ultra-high-resolution images, relying solely on extreme ends (the coarsest scale and the finest scale) skips transitional steps, leading to abrupt jumps in resolution and context. Incorporating intermediate magnification levels allows the framework to progressively recover details lost during downsampling while maintaining contextual awareness to resolve local ambiguities [1]. \n\nSpecifically, quantitative ablation studies on datasets like Cityscapes demonstrate the performance impact of these scales: while a direct refinement from the lowest scale straight to the highest scale yields a modest improvement of about 2% in mean Intersection over Union (mIoU), introducing the intermediate scale levels significantly boosts performance by an additional 4.34% mIoU [2]. As the model progresses through each intermediate stage, errors progressively decrease and the segmentation boundaries become increasingly refined [2].",
+      "citations": [
+        {
+          "index": 1,
+          "title": "Progressive Semantic Segmentation",
+          "section": "Abstract",
+          "is_main_paper": true
+        },
+        {
+          "index": 2,
+          "title": "Progressive Semantic Segmentation",
+          "section": "Benefits of multiple scale levels",
+          "is_main_paper": true
+        }
+      ]
+    },
+    {
+      "id": "Q08",
+      "type": "in-paper",
+      "question": "How does the number of refinement points affect MagNet's accuracy?",
+      "sectionChecks": [
+        {
+          "marker": 1,
+          "correct": true,
+          "pointsTo": "main paper › Ablation study: point selection"
+        }
+      ],
+      "namedChecks": [],
+      "externalCited": false,
+      "seconds": 55.132,
+      "answer": "Based on MagNet's ablation study on point selection, the number of refinement points directly correlates with and affects the framework's accuracy (measured in mIoU) in the following ways [1]:\n\n* **Initial Improvement:** MagNet's performance improves as the number of refinement points increases [1].\n* **Peak Performance:** The accuracy reaches its peak and stops increasing once the number of refinement points reaches $2^{16}$ [1].\n* **Performance Drop with Excess Points:** If all points are selected for refinement, the accuracy drops to 66.86%, indicating that refining every single point degrades the segmentation quality [1]. \n\nThis behavior contrasts with methods like PointRend, whose performance decreases significantly and drops below the initial baseline when the number of selected points exceeds 2,048 [1].",
+      "citations": [
+        {
+          "index": 1,
+          "title": "Progressive Semantic Segmentation",
+          "section": "Ablation study: point selection",
+          "is_main_paper": true
+        }
+      ]
+    },
+    {
+      "id": "Q09",
+      "type": "in-paper",
+      "question": "Which segmentation backbones were tested with MagNet in the ablation study?",
+      "sectionChecks": [
+        {
+          "marker": 1,
+          "correct": true,
+          "pointsTo": "main paper › Ablation study: segmentation backbones"
+        },
+        {
+          "marker": 2,
+          "correct": false,
+          "pointsTo": "main paper › Introduction"
+        },
+        {
+          "marker": 3,
+          "correct": false,
+          "pointsTo": "main paper › Multi-stage processing pipeline"
+        },
+        {
+          "marker": 4,
+          "correct": false,
+          "pointsTo": "main paper › Experiments on the Cityscapes dataset"
+        }
+      ],
+      "namedChecks": [],
+      "externalCited": false,
+      "seconds": 50.853,
+      "answer": "In the ablation study on segmentation backbones, the MagNet framework was tested with five different segmentation networks: U-Net, FCN-8s, SegNet, DeepLabv3+, and FPN [1]. When integrated into MagNet, these backbone models showed significant improvements in segmentation results (ranging from 2% to 5%) compared to baseline downsampling or patch processing approaches [1].\n\n### Key Takeaways\n- **Backbones Tested:** U-Net , FCN-8s , SegNet [2], DeepLabv3+ [3], and FPN [4] [1].\n- **Performance Impact:** MagNet consistently enhanced the mIoU performance across all tested backbones, demonstrating the framework's flexibility and robustness [1].",
+      "citations": [
+        {
+          "index": 1,
+          "title": "Progressive Semantic Segmentation",
+          "section": "Ablation study: segmentation backbones",
+          "is_main_paper": true
+        },
+        {
+          "index": 2,
+          "title": "Progressive Semantic Segmentation",
+          "section": "Introduction",
+          "is_main_paper": true
+        },
+        {
+          "index": 3,
+          "title": "Progressive Semantic Segmentation",
+          "section": "Multi-stage processing pipeline",
+          "is_main_paper": true
+        },
+        {
+          "index": 4,
+          "title": "Progressive Semantic Segmentation",
+          "section": "Experiments on the Cityscapes dataset",
+          "is_main_paper": true
+        }
+      ]
+    },
+    {
+      "id": "Q10",
+      "type": "in-paper",
+      "question": "How was the refinement module trained?",
+      "sectionChecks": [
+        {
+          "marker": 1,
+          "correct": true,
+          "pointsTo": "main paper › Training."
+        }
+      ],
+      "namedChecks": [],
+      "externalCited": false,
+      "seconds": 58.432,
+      "answer": "Based on the provided evidence, the training procedure for the refinement module involves the following key details:\n\n* **Training Setup & Data:** For each dataset, a state-of-the-art segmentation model was first trained on downsampled images, while the refinement module was trained to refine coarse outputs using sliced image patches [1]. \n* **Data Augmentation:** Random image patch extraction was used alongside data augmentations consisting of rotation, as well as horizontal and vertical flipping [1].\n* **Optimizer and Hyperparameters:** The module was trained for 50 epochs using the SGD optimizer with a momentum of 0.9, a decayed weight of $5 \\times 10^{-4}$, and an initial learning rate of $10^{-3}$ [1]. The learning rate was decreased tenfold at epochs 20, 30, 40, and 45 [1].\n* **Loss Function and Hardware:** Cross-entropy was used as the loss function for training [1]. Training was performed with a batch size of 16 on a DGX-1 workstation equipped with Tesla V100 GPUs using PyTorch [1].",
+      "citations": [
+        {
+          "index": 1,
+          "title": "Progressive Semantic Segmentation",
+          "section": "Training.",
+          "is_main_paper": true
+        }
+      ]
+    },
+    {
+      "id": "Q11",
+      "type": "in-paper",
+      "question": "What results does MagNet achieve on the Gleason dataset?",
+      "sectionChecks": [
+        {
+          "marker": 1,
+          "correct": true,
+          "pointsTo": "main paper › grade lesions on ultra-high-resolution images."
+        }
+      ],
+      "namedChecks": [],
+      "externalCited": false,
+      "seconds": 51.831,
+      "answer": "On the Gleason dataset—which consists of ultra-high-resolution histopathology images ($5000 \\times 5000$ pixels) with four classes (benign, Grade 3, Grade 4, and Grade 5)—MagNet uses PSPNet with a ResNet-101 backbone as its segmentation network [1]. \n\nKey implementation and performance details include:\n- **Multi-scale pipeline:** MagNet operates across four refinement stages and scales ($625 \\rightarrow 1250 \\rightarrow 2500 \\rightarrow 5000$) using an input size of $512 \\times 512$ [1].\n- **Refinement strategy:** The standard MagNet approach utilizes $2^{16}$ refinement points for each scale [1]. A variant, MagNet-Fast, runs across four scales while limiting refinement to the three patches exhibiting the highest prediction uncertainty at each scale [1].\n- **Performance results:** By building upon the winning competition solution (PSPNet), MagNet successfully enhances performance, improving the baseline PSPNet model's mean Intersection over Union (mIoU) by 1.7% [1].",
+      "citations": [
+        {
+          "index": 1,
+          "title": "Progressive Semantic Segmentation",
+          "section": "grade lesions on ultra-high-resolution images.",
+          "is_main_paper": true
+        }
+      ]
+    },
+    {
+      "id": "Q12",
+      "type": "in-paper",
+      "question": "Describe the setup and results of MagNet on DeepGlobe.",
+      "sectionChecks": [
+        {
+          "marker": 1,
+          "correct": true,
+          "pointsTo": "main paper › DeepGlobe"
+        }
+      ],
+      "namedChecks": [],
+      "externalCited": false,
+      "seconds": 59.027,
+      "answer": "### Setup of MagNet on DeepGlobe\nThe DeepGlobe dataset consists of high-resolution satellite images of size $2448 \\times 2448$ pixels, annotated with seven landscape classes (six active classes used in mIoU calculation, ignoring the unknown class) [1]. The dataset split includes 455 training, 207 validation, and 142 testing images [1]. \n- **Segmentation Backbone:** A Feature Pyramid Network (FPN) with a ResNet-50 backbone was used as the base segmentation network, matching the prior work GLNet, with an input size of $508 \\times 508$ [1].\n- **Multi-Scale Stages:** MagNet employed three refinement stages spanning three scales ($612 \\to 1224 \\to 2448$) [1].\n- **Refinement Points & MagNet-Fast:** At each scale, $2^{16}$ points were selected for refinement [1]. For the **MagNet-Fast** variant, the framework selected only the top three patches exhibiting the highest prediction uncertainty levels at each scale level for processing [1].\n\n### Results on DeepGlobe\nIn the experiments, both standard MagNet and the accelerated MagNet-Fast successfully outperformed competing methods, including GLNet and PointRend (which was also trained using the same FPN segmentation backbone) [1].",
+      "citations": [
+        {
+          "index": 1,
+          "title": "Progressive Semantic Segmentation",
+          "section": "DeepGlobe",
+          "is_main_paper": true
+        }
+      ]
+    },
+    {
+      "id": "C01",
+      "type": "comparison",
+      "question": "Compare MagNet with PointRend for refining uncertain points.",
+      "sectionChecks": [
+        {
+          "marker": 1,
+          "correct": true,
+          "pointsTo": "main paper › Abstract"
+        },
+        {
+          "marker": 2,
+          "correct": true,
+          "pointsTo": "main paper › MagNet"
+        },
+        {
+          "marker": 4,
+          "correct": true,
+          "pointsTo": "main paper › Refinement module"
+        },
+        {
+          "marker": 5,
+          "correct": true,
+          "pointsTo": "main paper › Ablation study: point selection"
+        }
+      ],
+      "namedChecks": [
+        {
+          "marker": 3,
+          "name": "PointRend",
+          "correct": true,
+          "pointsTo": "external › PointRend: Image Segmentation As Rendering"
+        },
+        {
+          "marker": 4,
+          "name": "PointRend",
+          "correct": true,
+          "pointsTo": "main paper › Refinement module"
+        },
+        {
+          "marker": 5,
+          "name": "PointRend",
+          "correct": true,
+          "pointsTo": "main paper › Ablation study: point selection"
+        }
+      ],
+      "externalCited": true,
+      "seconds": 93.645,
+      "answer": "When comparing **MagNet** (Side A) with **PointRend** (Side B) for refining uncertain points in semantic segmentation, several key differences emerge regarding their formulations, point selection strategies, and scaling behaviors:\n\n* **Conceptual Framework:** \n  * *MagNet* is a multi-scale, multi-stage coarse-to-fine framework designed for ultra-high-resolution images. It propagates information across magnification levels using a dedicated refinement module [1][2]. \n  * *PointRend* treats image segmentation as a rendering problem, using an iterative subdivision algorithm to make point-based predictions at adaptively selected locations (such as object boundaries) on top of existing models [3].\n\n* **Uncertainty and Point Selection Strategy:** \n  * *PointRend* relies on a single uncertainty prediction derived from its initial estimates to select points [4]. \n  * *MagNet* extends this concept by computing and leveraging *two* distinct prediction uncertainty maps: one from the cumulative segmentation map of previous stages ($Y_u$) and one from the combined intermediate map ($R_u$) [4]. Its score map combines both ($Q = F(Y_u \\odot (1 - R_u)$), targeting locations where previous cumulative outputs are uncertain but the newly scaled refinement is confident [4].\n\n* **Robustness to the Number of Refinement Points:** \n  * According to ablation studies, *MagNet's* performance scales positively as the number of selected points increases, stabilizing around $2^{16}$ points before dropping only when *all* points are chosen [5]. \n  * In contrast, *PointRend's* performance decreases significantly when the number of selected points exceeds 2,048, eventually dipping below the baseline model's initial performance without refinement [5].",
+      "citations": [
+        {
+          "index": 1,
+          "title": "Progressive Semantic Segmentation",
+          "section": "Abstract",
+          "is_main_paper": true
+        },
+        {
+          "index": 2,
+          "title": "Progressive Semantic Segmentation",
+          "section": "MagNet",
+          "is_main_paper": true
+        },
+        {
+          "index": 3,
+          "title": "PointRend: Image Segmentation As Rendering",
+          "is_main_paper": false
+        },
+        {
+          "index": 4,
+          "title": "Progressive Semantic Segmentation",
+          "section": "Refinement module",
+          "is_main_paper": true
+        },
+        {
+          "index": 5,
+          "title": "Progressive Semantic Segmentation",
+          "section": "Ablation study: point selection",
+          "is_main_paper": true
+        }
+      ]
+    },
+    {
+      "id": "C02",
+      "type": "comparison",
+      "question": "Compare MagNet with GLNet for ultra-high resolution segmentation.",
+      "sectionChecks": [
+        {
+          "marker": 1,
+          "correct": true,
+          "pointsTo": "main paper › Abstract"
+        },
+        {
+          "marker": 2,
+          "correct": true,
+          "pointsTo": "main paper › Introduction"
+        },
+        {
+          "marker": 3,
+          "correct": true,
+          "pointsTo": "main paper › MagNet"
+        },
+        {
+          "marker": 4,
+          "correct": true,
+          "pointsTo": "main paper › Multi-stage processing pipeline"
+        },
+        {
+          "marker": 5,
+          "correct": true,
+          "pointsTo": "main paper › Refinement module"
+        },
+        {
+          "marker": 6,
+          "correct": true,
+          "pointsTo": "main paper › DeepGlobe"
+        }
+      ],
+      "namedChecks": [
+        {
+          "marker": 2,
+          "name": "GLNet",
+          "correct": true,
+          "pointsTo": "main paper › Introduction"
+        },
+        {
+          "marker": 2,
+          "name": "GLNet",
+          "correct": true,
+          "pointsTo": "main paper › Introduction"
+        },
+        {
+          "marker": 6,
+          "name": "GLNet",
+          "correct": true,
+          "pointsTo": "main paper › DeepGlobe"
+        }
+      ],
+      "externalCited": false,
+      "seconds": 71.218,
+      "answer": "When dealing with ultra-high-resolution semantic image segmentation, standard single-pass deep learning models fail due to severe GPU memory constraints [1][2]. To address this, various architectures handle large inputs by fusing global context with local details [2]. \n\n### Comparison: MagNet vs. GLNet (Global-Local Network)\n\n* **Scale Handling Approach:** \n  * **GLNet (Side B):** Combines a global branch (processing a downsampled version of the entire image) with a local branch (processing high-resolution patches independently) in a single-stage fusion [2]. However, the paper notes that for ultra-high-resolution images, there is a massive gap between the global scale and local patch scale, making it difficult to reconcile contrasting segmentation maps in a single feed-forward stage [2].\n  * **MagNet (Side A):** Proposes a progressive, multi-scale framework consisting of multiple processing stages ($m$ stages) spanning from the coarsest scale to the finest scale [3][4]. Instead of jumping directly from global to local patches, MagNet propagates information progressively across intermediate scales, where the output of one stage is fed into the next [1][3].\n\n* **Refinement Mechanism:**\n  * **MagNet (Side A):** Utilizes a dedicated refinement module at every stage. This module takes the cumulative segmentation map from previous stages and a scale-specific segmentation map, comparing prediction uncertainty to selectively update ambiguous locations [3][5]. \n  * **GLNet (Side B):** Relies on a global-local dual-branch architecture without this multi-stage progressive scale bridging [2].\n\n* **Performance and Experimentation:** \n  * In evaluations on high-resolution datasets like DeepGlobe (satellite imagery), MagNet and its variants use identical backbone architectures (such as FPN with a ResNet-50 backbone) and input sizes comparable to GLNet, demonstrating superior performance and outperforming existing methods [6].",
+      "citations": [
+        {
+          "index": 1,
+          "title": "Progressive Semantic Segmentation",
+          "section": "Abstract",
+          "is_main_paper": true
+        },
+        {
+          "index": 2,
+          "title": "Progressive Semantic Segmentation",
+          "section": "Introduction",
+          "is_main_paper": true
+        },
+        {
+          "index": 3,
+          "title": "Progressive Semantic Segmentation",
+          "section": "MagNet",
+          "is_main_paper": true
+        },
+        {
+          "index": 4,
+          "title": "Progressive Semantic Segmentation",
+          "section": "Multi-stage processing pipeline",
+          "is_main_paper": true
+        },
+        {
+          "index": 5,
+          "title": "Progressive Semantic Segmentation",
+          "section": "Refinement module",
+          "is_main_paper": true
+        },
+        {
+          "index": 6,
+          "title": "Progressive Semantic Segmentation",
+          "section": "DeepGlobe",
+          "is_main_paper": true
+        }
+      ]
+    },
+    {
+      "id": "C03",
+      "type": "comparison",
+      "question": "What are the differences between MagNet and CascadePSP?",
+      "sectionChecks": [
+        {
+          "marker": 1,
+          "correct": true,
+          "pointsTo": "main paper › Abstract"
+        },
+        {
+          "marker": 2,
+          "correct": true,
+          "pointsTo": "main paper › MagNet"
+        },
+        {
+          "marker": 3,
+          "correct": false,
+          "pointsTo": "main paper › Experiments"
+        },
+        {
+          "marker": 4,
+          "correct": false,
+          "pointsTo": "main paper › Content Resolution No.classes"
+        },
+        {
+          "marker": 5,
+          "correct": true,
+          "pointsTo": "main paper › Refinement module"
+        }
+      ],
+      "namedChecks": [
+        {
+          "marker": 6,
+          "name": "CascadePSP",
+          "correct": true,
+          "pointsTo": "external › Cascadepsp: Toward class-agnostic and very highresolution segmentation via global and local refinement"
+        }
+      ],
+      "externalCited": true,
+      "seconds": 78.47,
+      "answer": "Based on the provided evidence, **MagNet** is a multi-scale, multi-stage segmentation framework designed to process ultra-high-resolution images (such as urban views, aerial scenes, and histopathology images) without overloading GPU memory or losing fine details [1][2][3][4]. MagNet inspects an input image across multiple magnification levels (from coarsest to finest) by using a segmentation module and a refinement module at every stage [2]. It progressively propagates coarse-to-fine information, selectively replacing and refining regions in the cumulative segmentation map based on prediction uncertainty [2][5].\n\nOn the other hand, the available evidence for **CascadePSP** describes an abstract focusing on knowledge representation, link prediction in clinical domains, and a proposed Clustering Evaluation Protocol [6]. Because the evidence chunk for CascadePSP does not contain details about its image segmentation architecture or mechanisms, a direct technical comparison between MagNet's multi-scale progressive refinement pipeline and CascadePSP's internal architecture cannot be established from the provided text.",
+      "citations": [
+        {
+          "index": 1,
+          "title": "Progressive Semantic Segmentation",
+          "section": "Abstract",
+          "is_main_paper": true
+        },
+        {
+          "index": 2,
+          "title": "Progressive Semantic Segmentation",
+          "section": "MagNet",
+          "is_main_paper": true
+        },
+        {
+          "index": 3,
+          "title": "Progressive Semantic Segmentation",
+          "section": "Experiments",
+          "is_main_paper": true
+        },
+        {
+          "index": 4,
+          "title": "Progressive Semantic Segmentation",
+          "section": "Content Resolution No.classes",
+          "is_main_paper": true
+        },
+        {
+          "index": 5,
+          "title": "Progressive Semantic Segmentation",
+          "section": "Refinement module",
+          "is_main_paper": true
+        },
+        {
+          "index": 6,
+          "title": "Cascadepsp: Toward class-agnostic and very highresolution segmentation via global and local refinement",
+          "is_main_paper": false
+        }
+      ]
+    },
+    {
+      "id": "C04",
+      "type": "comparison",
+      "question": "Compare MagNet with SegFix and DenseCRF as segmentation refinement methods.",
+      "sectionChecks": [
+        {
+          "marker": 1,
+          "correct": true,
+          "pointsTo": "main paper › Abstract"
+        },
+        {
+          "marker": 4,
+          "correct": true,
+          "pointsTo": "main paper › MagNet"
+        },
+        {
+          "marker": 5,
+          "correct": true,
+          "pointsTo": "main paper › Refinement module"
+        }
+      ],
+      "namedChecks": [
+        {
+          "marker": 2,
+          "name": "SegFix",
+          "correct": true,
+          "pointsTo": "external › SegFix: Model-Agnostic Boundary Refinement for Segmentation"
+        },
+        {
+          "marker": 3,
+          "name": "DenseCRF",
+          "correct": true,
+          "pointsTo": "external › DeepLab: Semantic Image Segmentation with Deep Convolutional Nets, Atrous Convolution, and Fully Connected CRFs"
+        },
+        {
+          "marker": 2,
+          "name": "SegFix",
+          "correct": true,
+          "pointsTo": "external › SegFix: Model-Agnostic Boundary Refinement for Segmentation"
+        },
+        {
+          "marker": 2,
+          "name": "SegFix",
+          "correct": true,
+          "pointsTo": "external › SegFix: Model-Agnostic Boundary Refinement for Segmentation"
+        },
+        {
+          "marker": 3,
+          "name": "DenseCRF",
+          "correct": true,
+          "pointsTo": "external › DeepLab: Semantic Image Segmentation with Deep Convolutional Nets, Atrous Convolution, and Fully Connected CRFs"
+        },
+        {
+          "marker": 2,
+          "name": "SegFix",
+          "correct": true,
+          "pointsTo": "external › SegFix: Model-Agnostic Boundary Refinement for Segmentation"
+        },
+        {
+          "marker": 3,
+          "name": "DenseCRF",
+          "correct": true,
+          "pointsTo": "external › DeepLab: Semantic Image Segmentation with Deep Convolutional Nets, Atrous Convolution, and Fully Connected CRFs"
+        },
+        {
+          "marker": 2,
+          "name": "SegFix",
+          "correct": true,
+          "pointsTo": "external › SegFix: Model-Agnostic Boundary Refinement for Segmentation"
+        },
+        {
+          "marker": 3,
+          "name": "DenseCRF",
+          "correct": true,
+          "pointsTo": "external › DeepLab: Semantic Image Segmentation with Deep Convolutional Nets, Atrous Convolution, and Fully Connected CRFs"
+        }
+      ],
+      "externalCited": true,
+      "seconds": 97.158,
+      "answer": "In semantic image segmentation, accurately refining object boundaries and recovering lost details in high-resolution images is a core challenge. **MagNet** is compared here with two prominent external refinement and post-processing approaches: **SegFix** and **DenseCRF** (such as fully connected Conditional Random Fields used in DeepLab) [1][2][3]. \n\n### **Side-by-Side Comparison**\n\n*   **Core Philosophy and Architecture:**\n    *   **MagNet (Side A):** Operates as a multi-scale, multi-stage deep learning framework designed to handle ultra-high-resolution images without GPU memory explosion [1][4]. It processes an image progressively across multiple magnification levels (from coarsest to finest) [1][4]. At each stage, a dedicated refinement module combines the cumulative segmentation map from previous stages with a scale-specific segmentation map using uncertainty-guided selection [4][5].\n    *   **SegFix (Side B):** Functions as a model-agnostic, post-processing scheme focused specifically on boundary refinement [2]. Motivated by the observation that interior pixel predictions are much more reliable than boundary pixels, SegFix localizes boundary pixels and replaces their labels with those of corresponding interior pixels by learning directional mappings [2]. It requires no internal model information and runs as a separate post-processing step [2].\n    *   **DenseCRF (Side B):** Utilizes probabilistic graphical models (specifically fully connected Conditional Random Fields defined over all pixels in an image) to combine deep convolutional neural network (DCNN) responses with pixel-level pairwise edge potentials [3][6]. Its smoothness and appearance kernels maximize label agreement between similar pixels to snap boundaries to high-gradient edges [6].\n\n*   **Handling of Multi-Scale Context and Resolution:**\n    *   **MagNet:** Explicitly uses multiple magnification stages to resolve local ambiguities, allowing global context from coarser scales to correct fine-scale errors and vice versa [1][4].\n    *   **SegFix / DenseCRF:** Typically operate as post-processing or integrated smoothing steps on top of a single-pass segmentation output (or feature maps), relying on spatial gradients, local appearance, or learned interior-to-boundary directions rather than explicit multi-scale coarse-to-fine propagation stages [2][3].\n\n*   **Key Takeaways:**\n    *   **MagNet** provides progressive, multi-scale refinement where segmentation and refinement modules interact iteratively across scales using prediction uncertainty [4][5].\n    *   **SegFix** is a model-agnostic post-processing tool dedicated entirely to fixing boundary degradation by mapping boundary pixels to reliable interior pixels [2].\n    *   **DenseCRF** leverages pixel-level fully connected graphs and appearance/smoothness kernels to enforce spatial coherence and fine-tune localization boundaries [3][6].",
+      "citations": [
+        {
+          "index": 1,
+          "title": "Progressive Semantic Segmentation",
+          "section": "Abstract",
+          "is_main_paper": true
+        },
+        {
+          "index": 2,
+          "title": "SegFix: Model-Agnostic Boundary Refinement for Segmentation",
+          "is_main_paper": false
+        },
+        {
+          "index": 3,
+          "title": "DeepLab: Semantic Image Segmentation with Deep Convolutional Nets, Atrous Convolution, and Fully Connected CRFs",
+          "is_main_paper": false
+        },
+        {
+          "index": 4,
+          "title": "Progressive Semantic Segmentation",
+          "section": "MagNet",
+          "is_main_paper": true
+        },
+        {
+          "index": 5,
+          "title": "Progressive Semantic Segmentation",
+          "section": "Refinement module",
+          "is_main_paper": true
+        },
+        {
+          "index": 6,
+          "title": "Efficient inference in fully connected crfs with gaussian edge potentials",
+          "is_main_paper": false
+        }
+      ]
+    },
+    {
+      "id": "C05",
+      "type": "comparison",
+      "question": "Compare MagNet with RefineNet and FPN as multi-scale approaches.",
+      "sectionChecks": [
+        {
+          "marker": 1,
+          "correct": true,
+          "pointsTo": "main paper › Abstract"
+        },
+        {
+          "marker": 2,
+          "correct": true,
+          "pointsTo": "main paper › MagNet"
+        },
+        {
+          "marker": 5,
+          "correct": true,
+          "pointsTo": "main paper › Related Work"
+        }
+      ],
+      "namedChecks": [
+        {
+          "marker": 3,
+          "name": "RefineNet",
+          "correct": true,
+          "pointsTo": "external › RefineNet: Multi-path Refinement Networks for High-Resolution Semantic Segmentation"
+        },
+        {
+          "marker": 4,
+          "name": "FPN",
+          "correct": true,
+          "pointsTo": "external › Feature Pyramid Networks for Object Detection"
+        }
+      ],
+      "externalCited": true,
+      "seconds": 86.639,
+      "answer": "Comparing **MagNet** (Side A) with **RefineNet** and **Feature Pyramid Networks (FPN)** (Side B) reveals distinct approaches to handling multi-scale information and resolving memory constraints in computer vision tasks like semantic segmentation.\n\n### 1. Core Architectural Concepts\n* **MagNet (Side A):** MagNet is a multi-scale, multi-stage framework designed for ultra-high-resolution images without overloading GPU memory [1]. It processes an input image progressively across multiple magnification scales (from coarsest to finest) [2]. At each stage, it utilizes a segmentation module and a refinement module, propagating cumulative predictions forward and selectively updating uncertain regions based on prediction uncertainty maps [3, 7].\n* **RefineNet (Side B):** RefineNet is a generic multi-path refinement network that exploits information across the down-sampling path of a single deep convolutional network [3]. It uses long-range residual connections and chained residual pooling to directly fuse high-level semantic features from deeper layers with fine-grained features from earlier convolutions [3].\n* **Feature Pyramid Networks / FPN (Side B):** FPN builds feature pyramids from the inherent pyramidal hierarchy of deep convolutional networks using a top-down architecture with lateral connections [4]. It upsamples coarser, semantically strong feature maps and aggregates them with higher-resolution lower-layer features to build multi-scale feature representations [5].\n\n### 2. Side-by-Side Comparison Takeaways\n* **Handling High-Resolution Inputs & Memory:** MagNet explicitly slices ultra-high-resolution images into patches and traverses across discrete magnification levels to fit GPU memory constraints while recovering fine details [0, 4]. In contrast, RefineNet and FPN operate on feature maps within a network backbone (or standard pyramid representations) to recover resolution lost during single-pass downsampling [20, 21].\n* **Information Flow and Fusion:** RefineNet and FPN fuse features across different network layers or resolutions within a single or unified network pass via residual/lateral connections [2, 20, 21]. MagNet propagates information across *stages* from coarse to fine scales, where a refinement module explicitly replaces uncertain areas in cumulative segmentation maps using scale-specific predictions [3, 7].\n* **Backbone Agnosticism:** MagNet acts as an overarching multi-scale framework whose segmentation and refinement modules are backbone-agnostic (it can integrate backbones like FPN, U-Net, or PSPNet to boost their performance) [3, 16, 18], whereas RefineNet and FPN are built as specific network architectures or feature extractors [20, 21].",
+      "citations": [
+        {
+          "index": 1,
+          "title": "Progressive Semantic Segmentation",
+          "section": "Abstract",
+          "is_main_paper": true
+        },
+        {
+          "index": 2,
+          "title": "Progressive Semantic Segmentation",
+          "section": "MagNet",
+          "is_main_paper": true
+        },
+        {
+          "index": 3,
+          "title": "RefineNet: Multi-path Refinement Networks for High-Resolution Semantic Segmentation",
+          "is_main_paper": false
+        },
+        {
+          "index": 4,
+          "title": "Feature Pyramid Networks for Object Detection",
+          "is_main_paper": false
+        },
+        {
+          "index": 5,
+          "title": "Progressive Semantic Segmentation",
+          "section": "Related Work",
+          "is_main_paper": true
+        }
+      ]
+    },
+    {
+      "id": "C06",
+      "type": "comparison",
+      "question": "What are the differences between MagNet and the related work it cites on high-resolution segmentation?",
+      "sectionChecks": [
+        {
+          "marker": 1,
+          "correct": true,
+          "pointsTo": "main paper › Abstract"
+        },
+        {
+          "marker": 2,
+          "correct": true,
+          "pointsTo": "main paper › Introduction"
+        },
+        {
+          "marker": 4,
+          "correct": false,
+          "pointsTo": "main paper › grade lesions on ultra-high-resolution images."
+        },
+        {
+          "marker": 5,
+          "correct": false,
+          "pointsTo": "main paper › Experiments on the Cityscapes dataset"
+        },
+        {
+          "marker": 6,
+          "correct": false,
+          "pointsTo": "main paper › Benefits of multiple scale levels"
+        },
+        {
+          "marker": 7,
+          "correct": false,
+          "pointsTo": "main paper › Ablation study: point selection"
+        },
+        {
+          "marker": 8,
+          "correct": true,
+          "pointsTo": "main paper › Refinement module"
+        }
+      ],
+      "namedChecks": [
+        {
+          "marker": 4,
+          "name": "RefineNet",
+          "correct": false,
+          "pointsTo": "main paper › grade lesions on ultra-high-resolution images."
+        },
+        {
+          "marker": 4,
+          "name": "FPN",
+          "correct": false,
+          "pointsTo": "main paper › grade lesions on ultra-high-resolution images."
+        },
+        {
+          "marker": 4,
+          "name": "PSPNet",
+          "correct": false,
+          "pointsTo": "main paper › grade lesions on ultra-high-resolution images."
+        },
+        {
+          "marker": 4,
+          "name": "ICNet",
+          "correct": false,
+          "pointsTo": "main paper › grade lesions on ultra-high-resolution images."
+        },
+        {
+          "marker": 4,
+          "name": "HRNet",
+          "correct": false,
+          "pointsTo": "main paper › grade lesions on ultra-high-resolution images."
+        },
+        {
+          "marker": 6,
+          "name": "PointRend",
+          "correct": false,
+          "pointsTo": "main paper › Benefits of multiple scale levels"
+        },
+        {
+          "marker": 7,
+          "name": "PointRend",
+          "correct": false,
+          "pointsTo": "main paper › Ablation study: point selection"
+        }
+      ],
+      "externalCited": true,
+      "seconds": 81.863,
+      "answer": "The main paper introduces **MagNet**, a multi-scale, multi-stage semantic segmentation framework designed to handle ultra-high-resolution images (ranging from 2 to 25 million pixels) without exceeding GPU memory limits or losing fine details [1]. \n\n### Comparison with Related Work (Side B)\nRelated works on high-resolution segmentation and refinement typically fall into a few categories, which differ from MagNet in their architecture, multi-scale strategy, or refinement mechanisms:\n\n* **Single-Pass CNNs and Downsampling/Patch-based Methods:** Traditional deep learning techniques assume an entire image can be processed in a single feedforward pass [2]. When faced with high resolution, they either downsample the image (losing fine details) [12, 24] or divide it into local patches (losing the global context needed to resolve ambiguities) [3]. In contrast, MagNet uses a coarse-to-fine multi-stage framework that looks at the image across multiple magnification levels, recovering lost details while retaining global context [1].\n* **Multi-Scale and Scale-Fusion Architectures (e.g., ICNet, RefineNet, FPN, PSPNet, HRNet):** Methods like ICNet use cascaded architectures on downsampled inputs , RefineNet fuses upsampled low-resolution outputs [4], FPN aggregates multi-scale feature maps [5], and HRNet maintains parallel high-to-low resolution streams with repeated information exchange . While these approaches aggregate multi-scale features or context internally, MagNet operates as a distinct multi-stage pipeline where cumulative segmentation outputs are progressively refined across separate resolution scales using a dedicated refinement module [3, 7].\n* **Refinement and Point-Selection Methods (e.g., PointRend):** PointRend is a refinement technique that selects points for targeted processing [6]. However, the paper demonstrates a key operational difference in point selection scaling: while PointRend's performance drops significantly when the number of selected refinement points increases beyond 2048 (even falling below baseline), MagNet's accuracy improves as more points are selected up to a threshold ($2^{16}$ points) [7]. Furthermore, MagNet’s refinement module computes dual uncertainty maps based on cumulative and scale-specific predictions to selectively replace unreliable regions [8].\n* **Collaborative Global-Local Networks (e.g., GLNet):** Frameworks like GLNet pair global low-resolution representations with local high-resolution patches [5, 17]. MagNet extends multi-scale processing into a generalized progressive framework supporting backbone flexibility and efficient patch selection variants (MagNet-Fast) [3, 8].",
+      "citations": [
+        {
+          "index": 1,
+          "title": "Progressive Semantic Segmentation",
+          "section": "Abstract",
+          "is_main_paper": true
+        },
+        {
+          "index": 2,
+          "title": "Progressive Semantic Segmentation",
+          "section": "Introduction",
+          "is_main_paper": true
+        },
+        {
+          "index": 3,
+          "title": "RefineNet: Multi-path Refinement Networks for High-Resolution Semantic Segmentation",
+          "is_main_paper": false
+        },
+        {
+          "index": 4,
+          "title": "Progressive Semantic Segmentation",
+          "section": "grade lesions on ultra-high-resolution images.",
+          "is_main_paper": true
+        },
+        {
+          "index": 5,
+          "title": "Progressive Semantic Segmentation",
+          "section": "Experiments on the Cityscapes dataset",
+          "is_main_paper": true
+        },
+        {
+          "index": 6,
+          "title": "Progressive Semantic Segmentation",
+          "section": "Benefits of multiple scale levels",
+          "is_main_paper": true
+        },
+        {
+          "index": 7,
+          "title": "Progressive Semantic Segmentation",
+          "section": "Ablation study: point selection",
+          "is_main_paper": true
+        },
+        {
+          "index": 8,
+          "title": "Progressive Semantic Segmentation",
+          "section": "Refinement module",
+          "is_main_paper": true
+        }
+      ]
+    }
+  ]
+}

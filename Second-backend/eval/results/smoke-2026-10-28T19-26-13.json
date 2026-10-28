@@ -1,0 +1,137 @@
+{
+  "summary": {
+    "label": "smoke",
+    "model": "gemini/gemini-flash-lite-latest",
+    "date": "2026-10-28T19:26:13.818Z",
+    "questions": 2,
+    "errors": 0,
+    "sectionPrecision": {
+      "inPaper": 1,
+      "comparison": 0.16666666666666666
+    },
+    "namedCitationAccuracy": null,
+    "namedCitations": 0,
+    "externalUsage": 1
+  },
+  "results": [
+    {
+      "id": "Q02",
+      "type": "in-paper",
+      "question": "How does the refinement module decide which pixels to refine?",
+      "sectionChecks": [
+        {
+          "marker": 1,
+          "correct": true,
+          "pointsTo": "main paper › Refinement module"
+        },
+        {
+          "marker": 2,
+          "correct": true,
+          "pointsTo": "main paper › Ablation study: point selection"
+        }
+      ],
+      "namedChecks": [],
+      "externalCited": false,
+      "seconds": 57.981,
+      "answer": "In the MagNet framework, the refinement module decides which pixels to refine by evaluating the prediction uncertainty of two segmentation maps: the scale-cumulative segmentation map from previous stages ($Y$) and an initial combined segmentation map ($R$) produced by fusing $Y$ with the scale-specific segmentation map ($O$) from the current stage [1]. \n\nSpecifically, the selection process works as follows:\n- **Uncertainty Calculation:** The framework computes prediction confidence for each pixel as the absolute difference between the highest and second-highest class probability values [1]. The uncertainty score (ranging from 0 to 1) is complementary to this confidence [1]. This yields uncertainty maps $Y_u$ (for the cumulative map) and $R_u$ (for the combined map) [1].\n- **Score Mapping:** Pixels are selected based on locations where the previous cumulative prediction is uncertain, but the newly combined prediction is certain [1]. A ranking score map $Q$ is computed using the formula $Q = F(Y_u \\odot (1 - R_u))$, where $\\odot$ denotes point-wise multiplication and $F$ represents a median filtering operation used to smooth the score map [1].\n- **Point Selection:** The top $k$ locations (e.g., $2^{16}$ points) with the highest score $Q$ are chosen for refinement [1][2]. Ablation studies show that utilizing both uncertainty maps together and applying median filtering yields the best performance [2].",
+      "citations": [
+        {
+          "index": 1,
+          "title": "Progressive Semantic Segmentation",
+          "section": "Refinement module",
+          "is_main_paper": true
+        },
+        {
+          "index": 2,
+          "title": "Progressive Semantic Segmentation",
+          "section": "Ablation study: point selection",
+          "is_main_paper": true
+        }
+      ]
+    },
+    {
+      "id": "C02",
+      "type": "comparison",
+      "question": "Compare MagNet with GLNet for ultra-high resolution segmentation.",
+      "sectionChecks": [
+        {
+          "marker": 1,
+          "correct": false,
+          "pointsTo": "main paper › Abstract"
+        },
+        {
+          "marker": 3,
+          "correct": false,
+          "pointsTo": "main paper › MagNet"
+        },
+        {
+          "marker": 4,
+          "correct": false,
+          "pointsTo": "main paper › Refinement module"
+        },
+        {
+          "marker": 5,
+          "correct": false,
+          "pointsTo": "main paper › MagNet-Fast"
+        },
+        {
+          "marker": 6,
+          "correct": false,
+          "pointsTo": "main paper › Experiments on the Cityscapes dataset"
+        },
+        {
+          "marker": 7,
+          "correct": true,
+          "pointsTo": "main paper › DeepGlobe"
+        }
+      ],
+      "namedChecks": [],
+      "externalCited": true,
+      "seconds": 139.324,
+      "answer": "Both **MagNet** (Main Paper, Side A) and **GLNet** (Collaborative Global-Local Networks, Side B) are designed to solve the critical memory bottleneck in ultra-high resolution semantic segmentation without sacrificing fine-grained details or global context [1][2]. However, they adopt different architectural strategies to achieve this balance.\n\n### Key Comparison Points:\n\n* **Architectural Design & Information Flow:**\n  * **MagNet (Side A):** Employs a multi-scale, multi-stage progressive framework ranging from coarse to fine magnification levels [1][3]. The output of each stage is propagated and refined in the next stage through a dedicated refinement module that dynamically targets uncertain pixel locations [3][4].\n  * **GLNet (Side B):** Utilizes a dual-branch architecture consisting of a global branch (processing a downsampled version of the entire image for contextual dependencies) and a local branch (processing cropped local patches for high-resolution fine structures), deeply fusing feature maps from both branches simultaneously [2].\n\n* **Memory and Computational Efficiency:**\n  * **MagNet:** Operates within strict GPU memory limits by dividing images into patches at multiple scales and utilizing uncertainty-based point selection (or MagNet-Fast to select high-uncertainty patches) to keep computation efficient [5][6].\n  * **GLNet:** Designed for extreme memory-efficiency (running under tight constraints like a single GPU with minimal memory) by coordinating global and local feature representations to optimize the accuracy-memory trade-off [2].\n\n* **Performance and Evaluation:**\n  * Experiments on benchmark high-resolution datasets (such as DeepGlobe aerial imagery) demonstrate that MagNet consistently outperforms prior state-of-the-art methods, including GLNet-backed baselines, by effectively recovering lost details through progressive refinement stages [1][7].\n\n### Summary Takeaways\n* **MagNet** relies on a progressive, multi-stage coarse-to-fine refinement pipeline across multiple scale levels [1][3].\n* **GLNet** relies on a parallel global-local dual-branch structure that deeply fuses downsampled global context with local patch details [2].\n* Both frameworks successfully overcome the limitations of naive downsampling (which loses fine textures) and patch-based slicing (which suffers from local ambiguity) [1][2].",
+      "citations": [
+        {
+          "index": 1,
+          "title": "Progressive Semantic Segmentation",
+          "section": "Abstract",
+          "is_main_paper": true
+        },
+        {
+          "index": 2,
+          "title": "Collaborative Global-Local Networks for Memory-Efficient Segmentation of Ultra-High Resolution Images",
+          "is_main_paper": false
+        },
+        {
+          "index": 3,
+          "title": "Progressive Semantic Segmentation",
+          "section": "MagNet",
+          "is_main_paper": true
+        },
+        {
+          "index": 4,
+          "title": "Progressive Semantic Segmentation",
+          "section": "Refinement module",
+          "is_main_paper": true
+        },
+        {
+          "index": 5,
+          "title": "Progressive Semantic Segmentation",
+          "section": "MagNet-Fast",
+          "is_main_paper": true
+        },
+        {
+          "index": 6,
+          "title": "Progressive Semantic Segmentation",
+          "section": "Experiments on the Cityscapes dataset",
+          "is_main_paper": true
+        },
+        {
+          "index": 7,
+          "title": "Progressive Semantic Segmentation",
+          "section": "DeepGlobe",
+          "is_main_paper": true
+        }
+      ]
+    }
+  ]
+}
