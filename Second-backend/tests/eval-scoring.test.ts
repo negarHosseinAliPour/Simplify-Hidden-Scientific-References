@@ -52,7 +52,7 @@ describe("sectionMatches", () => {
 
 describe("scoreNamedCitations on a real answer with the numbering bug", () => {
   const q = spec.questions.find((x: any) => x.id === "C06");
-  const checks = scoreNamedCitations(answer, citations, spec.papers, q.namedPapers, q.acceptableSections);
+  const checks = scoreNamedCitations(answer, citations, spec.papers, q.namedPapers);
   const byName = Object.fromEntries(checks.map((c) => [c.name, c.correct]));
 
   it("finds each named paper followed by a citation", () => {
@@ -61,21 +61,25 @@ describe("scoreNamedCitations on a real answer with the numbering bug", () => {
     );
   });
 
-  it("marks citations that point to the named paper as correct", () => {
+  it("marks citations that point to the named paper itself as correct", () => {
     expect(byName.SegNet).toBe(true);
     expect(byName.RefineNet).toBe(true);
   });
 
   it("catches citations that point to an unrelated section or the wrong paper", () => {
     expect(byName.GLNet).toBe(false); // → "Downsample X s"
-    expect(byName.PointRend).toBe(false); // → "Benefits of multiple scale levels"
     expect(byName.FCN).toBe(false); // → the GLNet paper
     expect(byName.DeepLab).toBe(false);
     expect(byName.FPN).toBe(false);
   });
 
-  it("scores 2 of 7 named citations as correct", () => {
-    expect(ratio(checks)).toBeCloseTo(2 / 7);
+  it("accepts a section of the main paper that discusses the named work", () => {
+    // "Benefits of multiple scale levels" holds the Cityscapes comparison that includes PointRend.
+    expect(byName.PointRend).toBe(true);
+  });
+
+  it("scores 3 of 7 named citations as correct", () => {
+    expect(ratio(checks)).toBeCloseTo(3 / 7);
   });
 });
 
@@ -100,7 +104,7 @@ describe("scoring a comparison answer that cites by sentence", () => {
   const q = spec.questions.find((x: any) => x.id === "C02");
 
   it("credits sentences about GLNet that cite the GLNet paper or a section discussing it", () => {
-    const checks = scoreNamedCitations(c02Answer, c02Citations, spec.papers, q.namedPapers, q.acceptableSections);
+    const checks = scoreNamedCitations(c02Answer, c02Citations, spec.papers, q.namedPapers);
     expect(checks.length).toBe(3);
     expect(ratio(checks)).toBe(1);
   });
@@ -128,6 +132,12 @@ describe("questions.json", () => {
     for (const q of spec.questions) {
       expect(q.acceptableSections.length).toBeGreaterThan(0);
       for (const name of q.namedPapers ?? []) expect(spec.papers[name], `${q.id} ${name}`).toBeDefined();
+    }
+  });
+
+  it("lists, for every named paper, the main-paper sections that discuss it", () => {
+    for (const [name, paper] of Object.entries<any>(spec.papers)) {
+      expect(paper.discussedIn?.length, name).toBeGreaterThan(0);
     }
   });
 });

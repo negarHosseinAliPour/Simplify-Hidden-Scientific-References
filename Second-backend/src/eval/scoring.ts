@@ -11,6 +11,8 @@ export interface EvalCitation {
 export interface PaperSpec {
   aliases: string[];
   titleKeywords: string[];
+  /** Sections of the main paper that discuss this work. */
+  discussedIn?: string[];
 }
 
 export interface CitationCheck {
@@ -69,7 +71,8 @@ export function splitSentences(answer: string): string[] {
 
 /**
  * Named-citation accuracy: for every sentence that names another paper and carries
- * citations, do they point to that paper or to a main-paper section discussing it?
+ * citations, do they point to that paper or to a main-paper section that discusses it
+ * (the paper's discussedIn list)?
  *
  * - If citations follow the name directly ("GLNet [5]"), all of them must be valid.
  *   This catches the paper's own reference numbers being reused as evidence IDs.
@@ -79,8 +82,7 @@ export function scoreNamedCitations(
   answer: string,
   citations: EvalCitation[],
   papers: Record<string, PaperSpec>,
-  names: string[],
-  acceptableSections: string[]
+  names: string[]
 ): CitationCheck[] {
   const checks: CitationCheck[] = [];
 
@@ -88,7 +90,7 @@ export function scoreNamedCitations(
     const c = citations.find((x) => x.index === n);
     const title = norm(c?.title);
     const isNamedPaper = !!c && !c.is_main_paper && spec.titleKeywords.some((k) => title.includes(norm(k)));
-    const isDiscussingSection = !!c?.is_main_paper && sectionMatches(c.section, acceptableSections);
+    const isDiscussingSection = !!c?.is_main_paper && sectionMatches(c.section, spec.discussedIn ?? []);
     return { ok: isNamedPaper || isDiscussingSection, pointsTo: describe(c) };
   };
 

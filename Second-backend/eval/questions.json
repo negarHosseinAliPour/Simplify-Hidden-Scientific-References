@@ -1,6 +1,6 @@
 {
   "paper": "Huynh et al., Progressive Semantic Segmentation (MagNet), CVPR 2021",
-  "notes": "acceptableSections are matched case-insensitively as substrings of GROBID section names. namedPapers lists works a comparison answer may name; a citation attached to that name is correct if it points to the paper itself (titleKeywords) or to an acceptable section of the main paper that discusses it. For section precision in comparison questions, magnetSections are also accepted, since the answer has to describe MagNet's side; named citations must still point to the named paper or to acceptableSections.",
+  "notes": "acceptableSections: GROBID sections of the main paper that answer the question (case-insensitive substring match). magnetSections: sections describing MagNet itself, also accepted in comparison answers because they must describe MagNet's side. papers[*].discussedIn: sections of the main paper that mention that work (read from the paper text). A citation attached to a named paper is correct if it points to that paper or to a section in its discussedIn list. Changes after the first baseline, each checked against the paper text: Q02 +MagNet (section 3 says refinement happens at locations chosen by the uncertainty of the two maps); Q04 +DeepGlobe, +grade lesions (both describe the MagNet-Fast setup); Q07 +Abstract (explains why each stage looks at a higher resolution); named citations now use discussedIn per paper instead of the question's sections.",
   "magnetSections": [
     "Abstract",
     "MagNet",
@@ -18,6 +18,11 @@
       ],
       "titleKeywords": [
         "global-local"
+      ],
+      "discussedIn": [
+        "Introduction",
+        "Related Work",
+        "DeepGlobe"
       ]
     },
     "PointRend": {
@@ -26,6 +31,16 @@
       ],
       "titleKeywords": [
         "pointrend"
+      ],
+      "discussedIn": [
+        "Introduction",
+        "Related Work",
+        "Refinement module",
+        "Benefits of multiple scale levels",
+        "Experiments on the Cityscapes dataset",
+        "Ablation study: point selection",
+        "DeepGlobe",
+        "grade lesions"
       ]
     },
     "CascadePSP": {
@@ -35,6 +50,9 @@
       ],
       "titleKeywords": [
         "cascadepsp"
+      ],
+      "discussedIn": [
+        "Related Work"
       ]
     },
     "SegFix": {
@@ -43,6 +61,11 @@
       ],
       "titleKeywords": [
         "segfix"
+      ],
+      "discussedIn": [
+        "Related Work",
+        "Benefits of multiple scale levels",
+        "Experiments on the Cityscapes dataset"
       ]
     },
     "DenseCRF": {
@@ -54,6 +77,13 @@
       ],
       "titleKeywords": [
         "fully connected crfs"
+      ],
+      "discussedIn": [
+        "Related Work",
+        "Benefits of multiple scale levels",
+        "Experiments on the Cityscapes dataset",
+        "DeepGlobe",
+        "grade lesions"
       ]
     },
     "DGF": {
@@ -65,6 +95,13 @@
       "titleKeywords": [
         "guided filter",
         "guided image filtering"
+      ],
+      "discussedIn": [
+        "Related Work",
+        "Benefits of multiple scale levels",
+        "Experiments on the Cityscapes dataset",
+        "DeepGlobe",
+        "grade lesions"
       ]
     },
     "RefineNet": {
@@ -73,6 +110,9 @@
       ],
       "titleKeywords": [
         "refinenet"
+      ],
+      "discussedIn": [
+        "Related Work"
       ]
     },
     "FPN": {
@@ -82,6 +122,10 @@
       ],
       "titleKeywords": [
         "feature pyramid"
+      ],
+      "discussedIn": [
+        "Related Work",
+        "DeepGlobe"
       ]
     },
     "DeepLab": {
@@ -92,6 +136,11 @@
       ],
       "titleKeywords": [
         "deeplab"
+      ],
+      "discussedIn": [
+        "Related Work",
+        "Ablation study: segmentation backbones",
+        "DeepGlobe"
       ]
     },
     "FCN": {
@@ -102,6 +151,9 @@
       ],
       "titleKeywords": [
         "fully convolutional networks"
+      ],
+      "discussedIn": [
+        "DeepGlobe"
       ]
     },
     "SegNet": {
@@ -110,6 +162,9 @@
       ],
       "titleKeywords": [
         "segnet"
+      ],
+      "discussedIn": [
+        "DeepGlobe"
       ]
     },
     "U-Net": {
@@ -120,6 +175,9 @@
       ],
       "titleKeywords": [
         "u-net"
+      ],
+      "discussedIn": [
+        "DeepGlobe"
       ]
     },
     "PSPNet": {
@@ -128,6 +186,10 @@
       ],
       "titleKeywords": [
         "pyramid scene parsing"
+      ],
+      "discussedIn": [
+        "Related Work",
+        "grade lesions"
       ]
     },
     "ICNet": {
@@ -136,6 +198,9 @@
       ],
       "titleKeywords": [
         "icnet"
+      ],
+      "discussedIn": [
+        "Related Work"
       ]
     },
     "HRNet": {
@@ -145,6 +210,13 @@
       ],
       "titleKeywords": [
         "high-resolution representation"
+      ],
+      "discussedIn": [
+        "Related Work",
+        "Training",
+        "Benefits of multiple scale levels",
+        "Experiments on the Cityscapes dataset",
+        "Ablation study: segmentation backbones"
       ]
     },
     "ISS": {
@@ -154,6 +226,9 @@
       ],
       "titleKeywords": [
         "iterative instance segmentation"
+      ],
+      "discussedIn": [
+        "Related Work"
       ]
     }
   },
@@ -177,7 +252,8 @@
       "acceptableSections": [
         "Refinement module",
         "Ablation study: point selection",
-        "With Xs"
+        "With Xs",
+        "MagNet"
       ]
     },
     {
@@ -200,7 +276,9 @@
       "acceptableSections": [
         "MagNet-Fast",
         "Benefits of multiple scale levels",
-        "Experiments on the Cityscapes dataset"
+        "Experiments on the Cityscapes dataset",
+        "DeepGlobe",
+        "grade lesions"
       ]
     },
     {
@@ -236,7 +314,8 @@
       "acceptableSections": [
         "Benefits of multiple scale levels",
         "Introduction",
-        "MagNet"
+        "MagNet",
+        "Abstract"
       ]
     },
     {

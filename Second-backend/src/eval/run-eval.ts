@@ -8,7 +8,9 @@
 //   - external usage: comparison answers that cite at least one downloaded paper
 //
 // Usage: npm run eval -- <paper.pdf> [--only Q01,C02] [--label baseline]
-// Each run writes eval/results/<label>-<timestamp>.json and .md
+//        npm run eval -- --rescore eval/results/<file>.json
+// Each run writes eval/results/<label>-<timestamp>.json and .md. --rescore recomputes the
+// scores of a saved run with the current questions.json, without calling the LLM again.
 import "dotenv/config";
 import fs from "fs";
 import path from "path";
@@ -48,9 +50,10 @@ interface QuestionResult {
 }
 
 function parseArgs(argv: string[]) {
-  const args = { pdf: "", only: [] as string[], label: "run" };
+  const args = { pdf: "", only: [] as string[], label: "run", rescore: "" };
   for (let i = 0; i < argv.length; i++) {
-    if (argv[i] === "--only") args.only = argv[++i].split(",").map((s) => s.trim());
+    if (argv[i] === "--rescore") args.rescore = argv[++i];
+    else if (argv[i] === "--only") args.only = argv[++i].split(",").map((s) => s.trim());
     else if (argv[i] === "--label") args.label = argv[++i];
     else if (!args.pdf) args.pdf = argv[i];
   }
@@ -59,19 +62,55 @@ function parseArgs(argv: string[]) {
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
+function scoreQuestion(
+  q: Question,
+  spec: { papers: Record<string, PaperSpec>; magnetSections: string[] },
+  answer: string,
+  citations: EvalCitation[]
+) {
+  const used = new Set(citedNumbers(answer));
+  return {
+    // A comparison answer has to describe MagNet's own side too.
+    sectionChecks: scoreSections(
+      answer,
+      citations,
+      q.type === "comparison" ? [...q.acceptableSections, ...spec.magnetSections] : q.acceptableSections
+    ),
+    namedChecks: q.namedPapers ? scoreNamedCitations(answer, citations, spec.papers, q.namedPapers) : [],
+    externalCited: citations.some((c) => !c.is_main_paper && used.has(c.index)),
+  };
+}
+
+function loadSpec(evalDir: string) {
+  return JSON.parse(fs.readFileSync(path.join(evalDir, "questions.json"), "utf8")) as {
+    papers: Record<string, PaperSpec>;
+    magnetSections: string[];
+    questions: Question[];
+  };
+}
+
+function rescore(file: string, evalDir: string) {
+  const saved = JSON.parse(fs.readFileSync(file, "utf8")) as { summary: { label: string; model: string }; results: QuestionResult[] };
+  const spec = loadSpec(evalDir);
+  const results = saved.results.map((r) => {
+    const q = spec.questions.find((x) => x.id === r.id);
+    if (!q || r.error || r.answer === undefined) return r;
+    return { ...r, ...scoreQuestion(q, spec, r.answer, r.citations ?? []) };
+  });
+  writeReport(results, `${saved.summary.label}-rescored`, saved.summary.model, evalDir);
+}
+
 async function main() {
   const args = parseArgs(process.argv.slice(2));
+  const evalDirForRescore = path.resolve(__dirname, "../../eval");
+  if (args.rescore) return rescore(args.rescore, evalDirForRescore);
   if (!args.pdf || !fs.existsSync(args.pdf)) {
     console.error("Usage: npm run eval -- <paper.pdf> [--only Q01,C02] [--label baseline]");
     process.exit(1);
   }
 
   const evalDir = path.resolve(__dirname, "../../eval");
-  const spec = JSON.parse(fs.readFileSync(path.join(evalDir, "questions.json"), "utf8")) as {
-    papers: Record<string, PaperSpec>;
-    magnetSections: string[];
-    questions: Question[];
-  };
+  const spec = loadSpec(evalDir);
   const questions = spec.questions.filter((q) => !args.only.length || args.only.includes(q.id));
   const delayMs = Number(process.env.EVAL_DELAY_MS ?? 15000);
   const llm = getLLMConfig();
@@ -104,23 +143,13 @@ async function main() {
         section: c.section,
         is_main_paper: c.is_main_paper,
       }));
-      const used = new Set(citedNumbers(answer));
       const result: QuestionResult = {
         ...base,
         seconds: (Date.now() - started) / 1000,
         error: res.status === "error" ? res.error : undefined,
         answer,
         citations,
-        // A comparison answer has to describe MagNet's own side too.
-        sectionChecks: scoreSections(
-          answer,
-          citations,
-          q.type === "comparison" ? [...q.acceptableSections, ...spec.magnetSections] : q.acceptableSections
-        ),
-        namedChecks: q.namedPapers
-          ? scoreNamedCitations(answer, citations, spec.papers, q.namedPapers, q.acceptableSections)
-          : [],
-        externalCited: citations.some((c) => !c.is_main_paper && used.has(c.index)),
+        ...scoreQuestion(q, spec, answer, citations),
       };
       results.push(result);
       console.log(
