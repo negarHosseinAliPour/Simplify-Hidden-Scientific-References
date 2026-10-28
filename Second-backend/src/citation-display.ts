@@ -18,5 +18,7 @@ export function formatCitationLine(n: number, c: DisplayCitation): string {
   const title = c.title?.trim() || "Untitled";
   const where = [c.section, c.page ? `p. ${c.page}` : ""].filter(Boolean).join(", ");
 
-  return `[${n}] ${source ? `${source}. ` : ""}${title}${where ? ` — ${where}` : ""}`;
+  // Avoid "et al.." when the source already ends with a period.
+  const sourcePart = source ? (source.endsWith(".") ? `${source} ` : `${source}. `) : "";
+  return `[${n}] ${sourcePart}${title}${where ? ` — ${where}` : ""}`;
 }

@@ -1,7 +1,7 @@
 import { readFileSync } from "fs";
 import path from "path";
 import { describe, expect, it } from "vitest";
-import { parseHeaderFromGrobidXML, shortAuthorList } from "../src/agents/a1/header-parser";
+import { parseHeaderFromGrobidXML, shortAuthorList, yearFromFilename } from "../src/agents/a1/header-parser";
 import { formatCitationLine } from "../src/citation-display";
 
 const xml = readFileSync(path.join(__dirname, "fixtures/grobid-sample.xml"), "utf8");
@@ -58,3 +58,23 @@ describe("formatCitationLine", () => {
     expect(formatCitationLine(3, { title: "Some Paper", section: "Abstract" })).toBe("[3] Some Paper — Abstract");
   });
 });
+
+describe("yearFromFilename", () => {
+  it("finds a single year in a conference file name", () => {
+    expect(yearFromFilename("Huynh_Progressive_Semantic_Segmentation_CVPR_2021_paper.pdf")).toBe("2021");
+  });
+
+  it("returns nothing when there is no year or more than one", () => {
+    expect(yearFromFilename("paper.pdf")).toBeUndefined();
+    expect(yearFromFilename("survey_2019_vs_2023.pdf")).toBeUndefined();
+    expect(yearFromFilename("arxiv_12021345.pdf")).toBeUndefined();
+  });
+});
+
+describe("formatCitationLine punctuation", () => {
+  it("does not print 'et al..' when the year is unknown", () => {
+    const line = formatCitationLine(1, { title: "MagNet", authors: ["A B", "C D", "E F"], section: "Abstract", page: 1 });
+    expect(line).toBe("[1] B et al. MagNet — Abstract, p. 1");
+  });
+});
+

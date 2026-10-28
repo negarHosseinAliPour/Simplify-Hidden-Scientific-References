@@ -64,3 +64,14 @@ describe("mapCitationIdsToIndices", () => {
     expect(mapCitationIdsToIndices(["b1", "b99"], xml)).toEqual([1]);
   });
 });
+
+describe("page numbers from heading coordinates", () => {
+  it("reads the page from <head coords> when GROBID is asked for teiCoordinates=head", () => {
+    const body = "Long enough text about the method that is definitely more than one hundred characters long so it is kept as a section.";
+    const doc = `<TEI><text><body><div><head coords="5,40,60,200,12">Method</head><p>${body}</p></div></body></text></TEI>`;
+    const [section] = parseSectionsFromGrobidXML(doc);
+    expect(section.section).toBe("Method");
+    expect(section.page).toBe(5);
+  });
+});
+

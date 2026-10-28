@@ -450,7 +450,8 @@ async function executeFunction(
           let formatted = "";
           switch (style) {
             case "APA":
-              formatted = `[${displayIdx + 1}] ${authors}${e.year ? ` (${e.year})` : ""}. ${e.title}. ${e.journal}.`;
+              formatted = `[${displayIdx + 1}] ${authors}${e.year ? ` (${e.year})` : ""}`;
+              formatted = `${formatted}${formatted.endsWith(".") ? "" : "."} ${e.title}. ${e.journal}.`;
               if (e.section) formatted += ` Section: ${e.section}${e.page ? `, p. ${e.page}` : ""}.`;
               if (e.doi) formatted += ` https://doi.org/${e.doi}`;
               break;

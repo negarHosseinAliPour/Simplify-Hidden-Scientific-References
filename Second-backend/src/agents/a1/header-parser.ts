@@ -61,3 +61,9 @@ export function shortAuthorList(authors: string[]): string {
   if (surnames.length === 2) return `${surnames[0]} and ${surnames[1]}`;
   return `${surnames[0]} et al.`;
 }
+
+/** A plausible publication year (1950-2099) in a file name, if there is exactly one. */
+export function yearFromFilename(filename: string): string | undefined {
+  const years = filename.match(/(?<!\d)(19[5-9]\d|20\d\d)(?!\d)/g);
+  return years && new Set(years).size === 1 ? years[0] : undefined;
+}

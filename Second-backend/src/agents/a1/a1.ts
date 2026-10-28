@@ -5,7 +5,7 @@ import type OpenAI from "openai";
 import { getLLMClient, getLLMConfig } from "../../llm/config";
 import { parseLLMJson } from "../../utils";
 import { parseSectionsFromGrobidXML } from "./sections-parser.js";
-import { parseHeaderFromGrobidXML } from "./header-parser";
+import { parseHeaderFromGrobidXML, yearFromFilename } from "./header-parser";
 import { extractCitationMarkersFromSection, mapCitationIdsToIndices } from "./citation-extractor.js";
 import dotenv from "dotenv";
 const pdfParse = require("pdf-parse");
@@ -273,7 +273,8 @@ async function extractFullDocumentGrobid(pdfPath: string): Promise<any> {
   // Check cache first
   const pdfBasename = path.basename(pdfPath, '.pdf');
   const cacheDir = "grobid-output";
-  const cacheFile = path.join(cacheDir, `${pdfBasename}_fulltext.xml`);
+  // "_coords" in the name invalidates caches written before coordinates were requested.
+  const cacheFile = path.join(cacheDir, `${pdfBasename}_fulltext_coords.xml`);
 
   if (!fs.existsSync(cacheDir)) {
     fs.mkdirSync(cacheDir, { recursive: true });
@@ -290,6 +291,9 @@ async function extractFullDocumentGrobid(pdfPath: string): Promise<any> {
     const formData = new FormData();
     const blob = new Blob([fileBuffer], { type: "application/pdf" });
     formData.append("input", blob, path.basename(pdfPath));
+    // Ask GROBID for page coordinates of section headings, so citations can
+    // point to real page numbers instead of estimated ones.
+    formData.append("teiCoordinates", "head");
 
     const startTime = Date.now();
     const response = await axios.post(
@@ -1344,7 +1348,9 @@ export async function run(task: A1Task): Promise<A1Result> {
         const header = parseHeaderFromGrobidXML(grobidResult.xml);
         const mainTitle = header.title || cleanTitle;
         const mainAuthors = header.authors;
-        const mainYear = header.year || "";
+        // Conference PDFs often have no date in the header; fall back to a year
+        // in the file name, e.g. "..._CVPR_2021_paper.pdf".
+        const mainYear = header.year || yearFromFilename(filename) || "";
         console.log(`[A1]  Main paper: "${mainTitle}" (${mainAuthors.length} authors, ${mainYear || "year unknown"})`);
 
         // Parse sections from XML
